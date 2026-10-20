@@ -1,0 +1,20 @@
+# Data (lives on the server, never committed)
+nfl_data/
+*.csv
+*.parquet
+*.zip
+
+# Secrets
+kaggle.json
+.env
+
+# Python
+__pycache__/
+
+# Spark / Hive
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Node
+node_modules/
