@@ -24,3 +24,6 @@ rm "$ZIP"
 
 END=$(date +%s)
 echo "Total download time: $((END - START)) seconds" | tee download_time.txt
+
+ls -lh *.csv | tee file_sizes.txt
+wc -l *.csv | tee line_counts.txt
