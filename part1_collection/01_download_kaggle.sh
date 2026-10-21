@@ -7,6 +7,8 @@ OUT_DIR="${1:-$HOME/nfl_data/raw/kaggle}"
 mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
 
+START=$(date +%s)
+
 COMPETITION="nfl-playing-surface-analytics"
 echo "Downloading $COMPETITION to $OUT_DIR ..."
 kaggle competitions download -c "$COMPETITION" -p "$OUT_DIR"
@@ -19,3 +21,6 @@ else
     python -m zipfile -e "$ZIP" .
 fi
 rm "$ZIP"
+
+END=$(date +%s)
+echo "Total download time: $((END - START)) seconds" | tee download_time.txt
