@@ -6,3 +6,7 @@ set -euo pipefail
 OUT_DIR="${1:-$HOME/nfl_data/raw/kaggle}"
 mkdir -p "$OUT_DIR"
 cd "$OUT_DIR"
+
+COMPETITION="nfl-playing-surface-analytics"
+echo "Downloading $COMPETITION to $OUT_DIR ..."
+kaggle competitions download -c "$COMPETITION" -p "$OUT_DIR"
