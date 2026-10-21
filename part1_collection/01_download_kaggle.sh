@@ -10,3 +10,12 @@ cd "$OUT_DIR"
 COMPETITION="nfl-playing-surface-analytics"
 echo "Downloading $COMPETITION to $OUT_DIR ..."
 kaggle competitions download -c "$COMPETITION" -p "$OUT_DIR"
+
+ZIP="$COMPETITION.zip"
+echo "Unzipping $ZIP ..."
+if command -v unzip >/dev/null 2>&1; then
+    unzip -o "$ZIP"
+else
+    python -m zipfile -e "$ZIP" .
+fi
+rm "$ZIP"
