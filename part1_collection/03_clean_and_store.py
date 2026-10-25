@@ -77,8 +77,14 @@ def clean_data(df, name):
 
         df = df.withColumn(
             "StadiumCategory",
-            F.when(stadium.rlike("indoor|dome|closed"), "indoor")
-             .when(stadium.rlike("outdoor|open"), "outdoor")
+            # Treat explicitly open roofs as outdoor/open-air.
+            # Keep unspecified roof states unknown.
+            F.when(stadium.rlike("open"), "outdoor")
+             .when(stadium.isin(
+                 "oudoor", "ourdoor", "outddors", "outdor", "outside"
+             ), "outdoor")
+             .when(stadium.rlike("indoor|dome|closed"), "indoor")
+             .when(stadium.rlike("outdoor"), "outdoor")
              .otherwise("unknown")
         )
 
