@@ -6,8 +6,6 @@ import time
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
-
-# Step 1: Set up Spark and the data folders
 base = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/nfl_data")
 
 raw = os.path.join(base, "raw")
@@ -16,8 +14,6 @@ clean = os.path.join(base, "clean")
 spark = SparkSession.builder.appName("NFL_Data_Cleaning").getOrCreate()
 spark.sparkContext.setLogLevel("ERROR")
 
-
-# Step 2: Set up the datasets
 datasets = {
     "kaggle_injuries": ("kaggle/InjuryRecord.csv", "csv"),
     "kaggle_plays": ("kaggle/PlayList.csv", "csv"),
@@ -27,7 +23,7 @@ datasets = {
 }
 
 
-# Step 3: Helper functions for evaluation
+# Helper functions for evaluation
 def count_nulls(df):
     results = {}
 
@@ -56,7 +52,7 @@ def folder_size(path):
     return total
 
 
-# Step 4: Functions to clean the NFL data
+# Functions to clean the NFL data
 def clean_data(df, name):
 
     # Convert empty CSV strings to null values
@@ -136,7 +132,7 @@ def clean_data(df, name):
     return df
 
 
-# Step 5: Read, clean, and save each dataset
+# Read, clean, and save each dataset
 start_time = time.perf_counter()
 
 try:
@@ -190,7 +186,7 @@ try:
             flush=True
         )
 
-    # Step 6: Print the final evaluation
+    # Print the final evaluation
     total_time = time.perf_counter() - start_time
 
     print("\n===== FINAL EVALUATION =====")
