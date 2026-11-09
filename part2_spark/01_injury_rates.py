@@ -69,3 +69,32 @@ for group_type, value in injury_groups.items():
 injury_rates = frames[0]
 for frame in frames[1:]:
     injury_rates = injury_rates.unionByName(frame)
+
+# group_value and field_type are part of the primary key, so they can't be null
+injury_rates = injury_rates.fillna(
+    "unknown", subset=["group_value", "field_type"]
+).cache()
+
+overall = {
+    row["field_type"]: row
+    for row in injury_rates.filter(F.col("group_type") == "overall").collect()
+}
+syn, nat = overall["Synthetic"], overall["Natural"]
+ratio = (syn["injuries"] / syn["plays"]) / (nat["injuries"] / nat["plays"])
+
+write_table(injury_rates, "injury_rates")
+
+# Print results for the Part 2 report
+unmatched = injured.filter(F.col("FieldType").isNull()).count()
+print("\n===== H1: injuries per 1,000 plays =====")
+print("Injuries counted:", injured.count(), "| without a player-game match:", unmatched)
+for name, row in (("Synthetic", syn), ("Natural", nat)):
+    print(
+        f"{name}: {row['injuries']} injuries / {row['plays']} plays"
+        f" = {row['injuries_per_1000']} per 1,000"
+    )
+print(f"Synthetic vs. natural rate ratio: {ratio:.2f}")
+print("Rows written to injury_rates:", injury_rates.count())
+injury_rates.orderBy("group_type", "group_value", "field_type").show(100, truncate=False)
+
+spark.stop()
