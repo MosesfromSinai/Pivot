@@ -2,7 +2,7 @@ import os
 
 from pyspark.sql import SparkSession
 
-MYSQL_URL = os.environ.get("MYSQL_URL", "jdbc:mysql://localhost:3307/pivot")
+MYSQL_URL = os.environ.get("MYSQL_URL", "jdbc:mysql://127.0.0.1:3307/pivot")
 MYSQL_USER = os.environ.get("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
 
