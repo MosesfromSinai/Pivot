@@ -37,3 +37,23 @@ CREATE TABLE IF NOT EXISTS movement_summary (
     avg_sharp_cuts  DOUBLE,
     PRIMARY KEY (field_type, roster_position)
 );
+
+CREATE TABLE IF NOT EXISTS league_injury_rates (
+    season            SMALLINT    NOT NULL,
+    team              VARCHAR(8)  NOT NULL,
+    surface           VARCHAR(16) NOT NULL,
+    games             INT         NOT NULL,
+    injuries          INT         NOT NULL,
+    injuries_per_game DOUBLE,
+    PRIMARY KEY (season, team, surface)
+);
+
+-- run_id and run_at fill in automatically; scripts append rows
+CREATE TABLE IF NOT EXISTS timing_results (
+    run_id         INT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    workers        INT       NOT NULL,
+    data_fraction  DOUBLE    NOT NULL,
+    rows_processed BIGINT,
+    seconds        DOUBLE    NOT NULL,
+    run_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
