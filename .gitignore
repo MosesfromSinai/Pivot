@@ -18,3 +18,6 @@ derby.log
 
 # Node
 node_modules/
+
+# Adolfo's benchmark artifacts (keep real data and local fixtures out of Git)
+timing_runs/
