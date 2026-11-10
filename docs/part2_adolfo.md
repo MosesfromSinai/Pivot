@@ -3,6 +3,45 @@
 Status: implementation draft; Joshua integration and server measurements pending.
 Do not present fixture values or unrun procedures as results.
 
+## Server preflight evidence supplied by Adolfo
+
+The following observations come from Adolfo's pasted server terminal output,
+not from a connection made by the local assistant. The transcript does not
+include a collection timestamp; record that with the eventual benchmark logs.
+
+| Check | Observed value |
+|---|---|
+| Host | `class-146.cs.ucr.edu` |
+| Activated conda environment | `cs179` |
+| Python | `3.11.17` |
+| Spark | `4.2.0` |
+| Scala | `2.13.18` |
+| Java | OpenJDK `17.0.18-internal` |
+| MySQL server (via socket and TCP) | `5.7.20`, port `3307` |
+| Cleaned input directories | `kaggle_tracking`, `kaggle_plays`, `kaggle_injuries` exist |
+| Database tables | All five expected Part 2 tables exist |
+| Existing timing rows | `0` at preflight; not a permanent assertion |
+| Filesystem free space | `50G` available of `194G`, `75%` used at preflight |
+| Shared checkout | `part2-moses` at `8e65c5a`, tracking `origin/part2-moses` |
+| Shared untracked file | `part1_collection/clean_output.txt`; preserve it |
+| Server Part 2 file listing | `01_injury_rates.py`, `common.py`, `schema.sql`; no movement job shown |
+
+The live `timing_results` definition matches the inspected schema: auto-generated
+`run_id INT` and `run_at TIMESTAMP`, required `workers INT`, `data_fraction DOUBLE`,
+`seconds DOUBLE`, and nullable `rows_processed BIGINT`. Engine: InnoDB.
+
+TCP access through the MySQL client succeeds at `127.0.0.1:3307`. This verifies
+the endpoint, but not Spark/JDBC loading, authentication, or writes. Still
+unverified: JDBC access from Spark, input file readability and contents, Joshua's
+movement entry point, and real benchmark behavior. Directory existence alone
+does not establish usable input data. Available disk space must be checked again
+before a run; no capacity estimate has yet been made for optional physical subsets.
+
+Preserve the shared checkout on Moses's branch and leave its untracked log intact.
+Use the separate-worktree procedure in `part2_spark/TIMING.md` after the reviewed
+Adolfo branch has been pushed. Neither local commit `558fc6c` nor its source files
+are implied to be present in the shared server checkout.
+
 ## Implementation entry (draft)
 
 `run_timing.py` launches the movement-feature benchmark sequentially for four
