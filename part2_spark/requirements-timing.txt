@@ -1,0 +1,2 @@
+# Plotting only. Runner, planning, and unit tests use the Python standard library.
+matplotlib>=3.8,<4
