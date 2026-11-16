@@ -3,10 +3,12 @@
 Due November 18, 2026. Owner: Adolfo Magallanes (GorillaAdolfo).
 
 This implementation supplies timing orchestration, evidence validation, and plotting.
-It does not implement Joshua's movement features. At the initial inspection,
-`origin/main` was `76a464a`, Moses's PR #4 was merged, and no movement job was
-available in the fetched branches or open pull requests. The adapter template is
-intentionally disabled. No real performance results exist yet.
+Joshua's job arrived in `origin/main` at `b38a02a` (PR #6) and was merged into this
+published branch without rewriting either history. `movement_adapter.py` now calls
+the shared, import-safe `build_features` in `02_movement_features.py`. No real
+performance results exist yet; Spark fixture and smoke validation remain for the
+server. Joshua's reported full-data count of 255,329 is a comparison to investigate
+on the same dataset, never a hardcoded expected output count.
 
 ## Routine sanity check
 
@@ -15,12 +17,13 @@ At implementation milestones and before a server run, check:
 - Work stays on `part2-adolfo` and within timing experiments; no stadium cleanup,
   injury-rate changes, shared infrastructure changes, or replacement movement logic.
 - Existing work is preserved. Review `git status --short` and the intended diff.
-- `common.py`, `schema.sql`, teammates' jobs, and final analysis tables stay untouched.
+- `common.py`, `schema.sql`, unrelated jobs, and final analysis tables stay untouched.
+  The movement job has only the authorized shared-function/entry-point refactor.
 - Synthetic fixtures are labeled; real measurements come only from class-146.
 - The adapter uses Joshua's actual calculation code and has no startup/actions/writes
   at import time. It consumes the supplied subset without rereading full tracking data.
 - Benchmark helper writes target only `timing_results` with explicit append mode.
-- No commit/push until Adolfo requests it. Use command-scoped author AND committer
+- Adolfo authorized this integration's commit/push. Use command-scoped author AND committer
   identity, a message under 10 words, intended files only, no attribution trailers,
   and no force-push. Verify staged diff and commit metadata before any later push.
 
@@ -53,29 +56,43 @@ measurements`. It is not report evidence. Output directories must be new;
 commands deliberately refuse to overwrite prior runs or plots. `timing_runs/`
 is ignored by Git, as are CSV files under the existing repository rules.
 
-## Integration dependency: Joshua's movement code
+## Integrated movement code
 
-Do not guess a script filename or CLI. Inspect his delivered implementation first.
-The following is **our proposed adapter contract**, not a claim about his interface:
+The real adapter uses this contract:
 
 ```python
 BENCHMARK_ADAPTER_VERSION = 1
-BENCHMARK_ADAPTER_READY = True  # only after integration and review
+BENCHMARK_ADAPTER_READY = True
 
 def build_features(*, spark, tracking, plays, injuries):
-    # Call Joshua's actual import-safe transformation functions here.
-    # Return two lazy DataFrames; no new movement formulas, actions, or writes.
+    # Delegate to 02_movement_features.build_features with these supplied inputs.
     return {"play_features": features, "movement_summary": summary}
 ```
 
-Start from `movement_adapter_template.py`, which has readiness set to False and
-raises an error. The ready adapter must live in the same reviewed checkout and
-return exactly the columns in `schema.sql`. If his job is currently a top-level
-script with unconditional writes, coordinate an import-safe transformation entry
-point and a no-final-writes path with Joshua. Do not run or import that script
-until its side effects have been inspected. Keep the actual formulas under his
-ownership. Adapter imports must work when `spark-submit` runs this driver; use
-the existing `part2_spark` module path or explicitly import reviewed code by path.
+`movement_adapter_template.py` remains disabled as a contract example. Use the
+actual `part2_spark/movement_adapter.py`. Both the normal script and benchmark call
+the same transformation function; formulas, boundary rules, metadata joins and
+output columns are preserved. Imports create no session and perform no actions.
+The function constructs lazy frames, without reads, writes or persistence.
+
+The normal script's `main()` reads the full data (default `~/nfl_data/clean`, or
+`--data-root PATH`), persists play features for previews and final MySQL writes,
+and unpersists/stops Spark in nested `finally` blocks. Running that script directly
+still publishes the two final analysis tables: **that is Joshua's separate step**.
+The benchmark never calls `main()`; its existing `--fraction` selects complete
+plays before calling the shared function, so no separate fraction argument or
+second sampling implementation is needed in the production job.
+
+Run the synthetic Spark correctness fixture in the existing server environment:
+
+```bash
+PIVOT_SPARK_TESTS=1 python -m unittest discover -s part2_spark/tests -v
+```
+
+It checks included/excluded boundaries, invalid/missing metadata, injury flags,
+formulas, SQL column types, validator failures, and repeated calls without leftover
+persistence. Local standard-library tests also verify import safety, delegation,
+and cleanup after a full-job failure. These are correctness tests, not timings.
 
 The driver guards `common.write_table` **before importing the adapter**, blocking
 all adapter calls to it. Its own saved helper appends one validated timing row.
@@ -107,18 +124,22 @@ reading the three cleaned Parquet datasets. It includes input reads, selection,
 Joshua's feature/summary transformations, and writing both complete outputs as
 Parquet in the run's unique `outputs/` directory. These writes force evaluation
 of every output column. There is no pre-count or tracking persistence before the
-timer. The driver adds no Spark caching; any caching introduced by the actual
-adapter must be reviewed and documented before integration. If the two output
-plans recompute common work, that time is included consistently.
+timer. Neither driver nor shared transformations cache data. The two output plans
+can recompute common work; that time is included consistently in both masters.
+Fresh processes isolate every configuration; no persisted frames survive a run.
 
 Excluded: Python/JVM/JDBC-package startup, session creation (recorded separately),
 input file metadata collection, validation/counting/fingerprinting, and appending
 the timing record. This measures computation plus isolated Parquet output, **not
 the final analysis-table JDBC write time**. Validation outside the timer reads the
 selected tracking again and validates saved output counts and primary keys.
-The play-feature output must cover exactly the selected PlayKeys, with one row
-per key and no plays outside the subset. Missing plays fail validation rather than
-silently reporting a different workload; discuss such failures with Joshua.
+Play-feature output must have unique keys belonging to the selected subset and
+non-null required fields. Valid boundaries and metadata exclude some selected
+PlayKeys, so output coverage is not required to be 100%. Every summary group must
+match the retained play-feature count for that surface/position, with no missing
+or extra groups. Empty outputs fail. Evidence distinguishes `rows_processed`
+(selected tracking rows), `selected_plays`, `retained_output_plays`, and
+`excluded_plays` (combined boundary/metadata exclusions, not a reason breakdown).
 Spark actions trigger execution; merely constructing lazy transformations is not
 a completed measurement. Reference:
 <https://spark.apache.org/docs/latest/rdd-programming-guide.html>.
@@ -132,8 +153,8 @@ Important limitations for the report:
   preparation time and keep layouts fixed between masters. That staging path is
   not implemented in this first version.
 - Input metadata (names, sizes, mtimes) is hashed before/after a run. Selected-row
-  counts, distinct plays, and a sum of full-row xxhash64 values are compared between
-  masters before the second measurement is appended. The row fingerprint is an
+  counts, distinct plays, retained/excluded counts, and a sum of full-row xxhash64
+  values are compared between masters before the second measurement is appended. The row fingerprint is an
   order-independent consistency check, not a cryptographic proof of equality.
 - Validation and previous runs can warm OS caches. Do not clear shared caches.
   local[2] follows local[1], so discuss order effects and shared-server load.
@@ -171,14 +192,16 @@ files, or copied logs. Do not dump environment variables. Review logs for secret
 before sharing them. The driver's own errors redact MYSQL_PASSWORD and MYSQL_URL;
 Spark/JDBC subprocess output cannot be guaranteed secret-free.
 
-After **Adolfo requests a commit/push and the reviewed branch is pushed**, create
+After the reviewed branch is pushed, inspect existing paths, then create
 a separate worktree; do not switch the team's shared checkout:
 
 ```bash
 git -C /home/cs179g/Pivot fetch origin
 git -C /home/cs179g/Pivot worktree list
-git -C /home/cs179g/Pivot worktree add --detach /home/cs179g/Pivot-adolfo origin/part2-adolfo
-cd /home/cs179g/Pivot-adolfo
+ls -ld /home/cs179g/Pivot-adolfo* 2>/dev/null || true
+commit=$(git -C /home/cs179g/Pivot rev-parse origin/part2-adolfo)
+checkout="/home/cs179g/Pivot-adolfo-$(date -u +%Y%m%dT%H%M%SZ)"
+test ! -e "$checkout" && git -C /home/cs179g/Pivot worktree add --detach "$checkout" "$commit" && cd "$checkout"
 git status --short --branch
 git rev-parse HEAD
 ```
@@ -190,13 +213,12 @@ quiet testing window with teammates rather than stopping their jobs.
 
 ## Server Linux: smoke, then required matrix
 
-**Blocked until Joshua's real adapter is ready and reviewed.** The placeholder
-below must be replaced by that verified adapter path; it is not his job filename.
+Run the synthetic Spark fixture above before the smoke test. Stop on a failed
+preflight or test and inspect its output before proceeding.
 
 ```bash
-cd /home/cs179g/Pivot-adolfo
 conda activate cs179
-adapter=/absolute/path/to/reviewed_movement_adapter.py
+adapter="$PWD/part2_spark/movement_adapter.py"
 python part2_spark/run_timing.py --plan
 smoke_dir="$HOME/pivot_timing/smoke-$(date -u +%Y%m%dT%H%M%SZ)"
 python part2_spark/run_timing.py --adapter "$adapter" --data-root /home/cs179g/nfl_data/clean --output-dir "$smoke_dir" --smoke
@@ -204,12 +226,8 @@ python part2_spark/run_timing.py --adapter "$adapter" --data-root /home/cs179g/n
 
 The smoke test selects about 1% of play keys on local[1], validates isolated outputs,
 and **does not insert into timing_results**. Review its `summary.json`, `run.log`,
-row counts, and actual output columns before launching the required work:
-
-```bash
-matrix_dir="$HOME/pivot_timing/required-$(date -u +%Y%m%dT%H%M%SZ)"
-python part2_spark/run_timing.py --adapter "$adapter" --data-root /home/cs179g/nfl_data/clean --output-dir "$matrix_dir"
-```
+row counts, retained/excluded plays, and output schemas before launching the
+required matrix. The full launch is held for the human smoke-output checkpoint.
 
 Every child command includes `--master 'local[1]'` or `--master 'local[2]'` and
 `--packages com.mysql:mysql-connector-j:8.4.0`. Commands are saved as exact argv

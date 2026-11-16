@@ -1,6 +1,7 @@
 # Adolfo's Part 2 report material
 
-Status: implementation draft; Joshua integration and server measurements pending.
+Status: movement integration implemented locally; server Spark fixtures, smoke,
+and real measurements pending. PR #5 remains a draft.
 Do not present fixture values or unrun procedures as results.
 
 ## Server preflight evidence supplied by Adolfo
@@ -32,8 +33,8 @@ The live `timing_results` definition matches the inspected schema: auto-generate
 
 TCP access through the MySQL client succeeds at `127.0.0.1:3307`. This verifies
 the endpoint, but not Spark/JDBC loading, authentication, or writes. Still
-unverified: JDBC access from Spark, input file readability and contents, Joshua's
-movement entry point, and real benchmark behavior. Directory existence alone
+unverified: JDBC access from Spark, input file readability and contents, the
+integrated movement entry point on the server, and real benchmark behavior. Directory existence alone
 does not establish usable input data. Available disk space must be checked again
 before a run; no capacity estimate has yet been made for optional physical subsets.
 
@@ -52,9 +53,35 @@ validates them, and appends successful timing rows through the shared MySQL help
 It leaves the team's final movement tables untouched. `plot_timing.py` validates
 the evidence and exports the timing table and execution-time graph.
 
-**Before using this paragraph:** integrate the actual adapter and verify all of
-these behaviors in the server smoke test. Record the actual adapter/job filename
-and commit hash here. The adapter template is not a completed movement job.
+`movement_adapter.py` delegates to `02_movement_features.py:build_features`.
+The normal script's explicit `main()` calls that same function and retains its
+full-data preview/publish behavior. Only the full job caches play features; it
+unpersists them and stops Spark even on failure. The benchmark does not cache,
+start another session, reread tracking, or call the full job's publishing entry.
+The transformation syntax tree was checked against Joshua's merged implementation:
+calculations and filters match, excluding persistence moved to the full entry.
+
+Local verification: 22 tests discovered, 20 passed; the real Spark fixture and
+Matplotlib rendering test skipped because these packages are absent locally.
+Both benchmark plans and Python compilation passed. Local mocks are correctness
+checks, not server or performance evidence. The opt-in Spark fixture checks valid
+and excluded event boundaries, metadata filtering, known feature values, column
+types, output validation failures, and repeated calls without persisted frames.
+Run it in the existing server environment before the smoke test.
+
+Output validation permits legitimate exclusions. It checks unique, non-null
+output keys, required metadata, output membership in the selected tracking keys,
+and exact per-group agreement between `movement_summary.plays` and `play_features`.
+Evidence records selected tracking rows, selected keys, retained output plays,
+and total exclusions separately. Exclusions combine boundary/metadata effects;
+they are not a per-reason audit. Joshua reported 255,329 full-data player-play
+outputs; compare that only against a full run of the same dataset and investigate
+differences. It is not a universal assertion or a timing observation.
+
+Server smoke validation, final-table preservation evidence, and the exact pushed
+commit used for measurements must still be recorded before treating this as a
+validated implementation. Joshua's pending full-data MySQL publishing remains
+his separate step and is not performed by benchmark runs.
 
 ## Timing evidence to insert after server runs
 
@@ -63,7 +90,7 @@ and commit hash here. The adapter template is not a completed movement job.
 - Timing boundary: session startup excluded; reads, filtering, computation, and
   isolated Parquet output included; validation and timing-record JDBC insert excluded.
 - `timing_table.md` and `timing_plot.png` from one complete validated suite.
-- Actual tracking rows and distinct plays at each fraction; same subset fingerprints
+- Actual tracking rows, selected keys, retained outputs and exclusions at each fraction; same subset fingerprints
   for both masters. Explain hash fractions versus actual row percentages.
 - Commands, successful/failing run logs, MySQL evidence, screenshot, and final-table
   preservation check. Retain failures rather than counting them as measurements.
@@ -84,6 +111,15 @@ and commit hash here. The adapter template is not a completed movement job.
    JDBC analysis writes, and exclude startup/validation. One run per configuration
    does not estimate variance. Label any additional repetitions separately.
 
+## Contribution so far
+
+Adolfo Magallanes implemented the timing runner, evidence validation and plotting
+tools, merged Joshua's delivered movement job into the timing branch, and exposed
+the original transformations through a shared import-safe function and real
+benchmark adapter. Local correctness checks passed as described above. Server
+execution, MySQL timing inserts, final graph/table and measured discussion remain
+pending; no speedup has been established.
+
 ## Contribution text (use only after completion)
 
 Adolfo Magallanes implemented and tested the timing runner and plotting tools,
@@ -92,6 +128,6 @@ configurations on class-146, appended validated timings to MySQL, and prepared
 the timing table, graph, evidence, and scaling discussion.
 
 The preceding text is a completion template, not a statement of work already run.
-Current completed work must be described separately from pending integration and
+Current completed work must be described separately from pending validation and
 server execution. Moses owns infrastructure/H1, Joshua owns movement calculations,
 and Colin owns the nflverse analysis.

@@ -142,7 +142,8 @@ class EvidenceTests(unittest.TestCase):
 
     def test_mismatched_subsets_and_provenance_are_rejected(self):
         for field, value in (("rows_processed", 999), ("subset_fingerprint", "different"),
-                             ("seed", 999), ("spark_version", "different")):
+                             ("seed", 999), ("spark_version", "different"),
+                             ("retained_output_plays", 999), ("excluded_plays", 999)):
             suite = copy.deepcopy(self.suite)
             suite["runs"][1][field] = value
             with self.subTest(field=field), self.assertRaises(ValueError):

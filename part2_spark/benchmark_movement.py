@@ -72,10 +72,14 @@ def select_tracking(tracking, fraction, seed, functions):
 
 def validate_outputs(spark, output_root, functions, tracking, selected_plays):
     counts = {}
+    frames = {}
     keys = {"play_features": ("play_key",),
             "movement_summary": ("field_type", "roster_position")}
     for name, primary_key in keys.items():
         saved = spark.read.parquet(str(output_root / name))
+        frames[name] = saved
+        if set(saved.columns) != set(OUTPUT_COLUMNS[name]):
+            raise ValueError(f"Saved output columns do not match schema.sql for {name}.")
         counts[name] = saved.count()
         if counts[name] <= 0:
             raise ValueError(f"Benchmark output {name} is empty.")
@@ -86,8 +90,8 @@ def validate_outputs(spark, output_root, functions, tracking, selected_plays):
         if duplicates.limit(1).count():
             raise ValueError(f"Duplicate primary keys in {name}.")
         if name == "play_features":
-            if counts[name] != selected_plays:
-                raise ValueError("play_features must contain one row for every selected PlayKey.")
+            if counts[name] > selected_plays:
+                raise ValueError("More output plays than selected PlayKeys.")
             selected_keys = tracking.select(
                 functions.col("PlayKey").cast("string").alias("play_key")
             ).distinct()
@@ -97,6 +101,21 @@ def validate_outputs(spark, output_root, functions, tracking, selected_plays):
             for column in ("player_key", "game_id", "field_type", "is_injury"):
                 if saved.filter(functions.col(column).isNull()).limit(1).count():
                     raise ValueError(f"Null required field {column} in play_features.")
+        else:
+            if saved.filter(functions.col("plays").isNull() | (functions.col("plays") <= 0)).limit(1).count():
+                raise ValueError("movement_summary must have positive non-null plays counts.")
+    # Boundary/metadata filtering legitimately excludes input plays. Each retained
+    # play must be represented once in exactly the matching summary group.
+    group_keys = ["field_type", "roster_position"]
+    expected = frames["play_features"].groupBy(*group_keys).count().withColumnRenamed("count", "expected_plays")
+    actual = frames["movement_summary"].select(*group_keys, "plays")
+    mismatch = expected.join(actual, group_keys, "full_outer").filter(
+        functions.col("expected_plays").isNull()
+        | functions.col("plays").isNull()
+        | (functions.col("expected_plays") != functions.col("plays"))
+    )
+    if mismatch.limit(1).count():
+        raise ValueError("movement_summary group counts do not agree with play_features.")
     return counts
 
 
@@ -181,7 +200,16 @@ def run(args):
             "default_parallelism": spark.sparkContext.defaultParallelism,
             "shuffle_partitions": spark.conf.get("spark.sql.shuffle.partitions"),
             "adaptive_enabled": spark.conf.get("spark.sql.adaptive.enabled"),
+            **{key: spark.sparkContext.getConf().get(key, "unset") for key in (
+                "spark.driver.memory", "spark.executor.memory", "spark.driver.extraJavaOptions",
+                "spark.executor.extraJavaOptions", "spark.sql.session.timeZone",
+            )},
         }
+        record["timing_boundary"] = (
+            "After session startup: input reads, selection, movement transformations, "
+            "and full-column isolated Parquet writes; excludes validation and JDBC append."
+        )
+        record["persistence_policy"] = "No driver or movement transformation persistence; fresh process per configuration."
 
         record["phase"] = "measurement"
         started = time.perf_counter()
@@ -194,9 +222,11 @@ def run(args):
         if not isinstance(outputs, dict) or set(outputs) != set(OUTPUT_COLUMNS):
             raise ValueError("Adapter must return exactly play_features and movement_summary frames.")
         check_master(spark, record["master"])
+        record["output_schemas"] = {}
         for name, columns in OUTPUT_COLUMNS.items():
             if set(outputs[name].columns) != set(columns):
                 raise ValueError(f"Adapter output columns do not match schema.sql for {name}.")
+            record["output_schemas"][name] = outputs[name].schema.jsonValue()
             # Writing every output column forces the real movement expressions to execute.
             outputs[name].select(*columns).write.mode("errorifexists").parquet(str(output_root / name))
         record["seconds"] = time.perf_counter() - started
@@ -218,6 +248,9 @@ def run(args):
         record["output_rows"] = validate_outputs(
             spark, output_root, F, tracking, record["selected_plays"]
         )
+        record["retained_output_plays"] = record["output_rows"]["play_features"]
+        record["excluded_plays"] = record["selected_plays"] - record["retained_output_plays"]
+        record["exclusion_definition"] = "Selected PlayKeys absent after Joshua's boundary and metadata rules."
         if input_manifest(args.data_root) != before:
             raise ValueError("Cleaned input file metadata changed during the benchmark.")
         if code_provenance(args.adapter)["source_sha256"] != record["code"]["source_sha256"]:
@@ -239,7 +272,8 @@ def run(args):
         record.update(status="success", phase="complete", finished_at=utc_now())
         write_json(result_path, record)
         print(json.dumps({k: record[k] for k in (
-            "run_id", "master", "data_fraction", "rows_processed", "seconds", "appended"
+            "run_id", "master", "data_fraction", "rows_processed", "selected_plays",
+            "retained_output_plays", "excluded_plays", "output_rows", "seconds", "appended"
         )}), flush=True)
         return 0
     except Exception as error:

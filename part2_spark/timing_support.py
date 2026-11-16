@@ -151,7 +151,8 @@ def ensure_paired_subsets(records):
         baseline = provenance
         fraction = record["data_fraction"]
         signature = (record["rows_processed"], record.get("selected_plays"),
-                     record.get("subset_fingerprint"))
+                     record.get("subset_fingerprint"), record.get("retained_output_plays"),
+                     record.get("excluded_plays"), record.get("output_rows"))
         if fraction in seen and seen[fraction] != signature:
-            raise ValueError(f"Input subsets differ between masters at fraction {fraction}.")
+            raise ValueError(f"Input subsets or output counts differ between masters at fraction {fraction}.")
         seen[fraction] = signature

@@ -70,9 +70,13 @@ def table_rows(records):
         pair = [indexed.get((w, fraction)) for w in WORKERS]
         if not any(pair):
             continue
-        count = next(r["rows_processed"] for r in pair if r)
+        measured = next(r for r in pair if r)
+        count = measured["rows_processed"]
         one, two = [r["seconds"] if r else None for r in pair]
         rows.append({"data_fraction": fraction, "rows_processed": count,
+                     **{key: measured.get(key) for key in (
+                         "selected_plays", "retained_output_plays", "excluded_plays",
+                     )},
                      "local1_seconds": one, "local2_seconds": two,
                      "speedup_1_over_2": one / two if one is not None and two is not None else None})
     return rows
@@ -83,13 +87,18 @@ def write_table(output_dir, rows, label):
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    lines = [label, "", "| Fraction | Actual tracking rows | local[1] (s) | local[2] (s) | Speedup |",
-             "|---|---:|---:|---:|---:|"]
+    lines = [label, "", "| Fraction | Actual tracking rows | Selected plays | Retained plays | Excluded plays | local[1] (s) | local[2] (s) | T1/T2 |",
+             "|---|---:|---:|---:|---:|---:|---:|---:|"]
     def value(number):
         return f"{number:.3f}" if number is not None else "missing"
     for row in rows:
+        play_counts = " | ".join(
+            f"{row[key]:,}" if row[key] is not None else "missing"
+            for key in ("selected_plays", "retained_output_plays", "excluded_plays")
+        )
         lines.append(
             f"| {row['data_fraction']:.0%} | {row['rows_processed']:,} | "
+            f"{play_counts} | "
             f"{value(row['local1_seconds'])} | {value(row['local2_seconds'])} | "
             f"{value(row['speedup_1_over_2'])} |"
         )
