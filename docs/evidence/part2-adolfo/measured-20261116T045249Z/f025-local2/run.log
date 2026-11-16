@@ -1,0 +1,88 @@
+WARNING: Using incubator modules: jdk.incubator.vector
+:: loading settings :: url = jar:file:/home/cs179g/miniconda3/envs/cs179/lib/python3.11/site-packages/pyspark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+Ivy Default Cache set to: /home/cs179g/.ivy2.5.2/cache
+The jars for the packages stored in: /home/cs179g/.ivy2.5.2/jars
+com.mysql#mysql-connector-j added as a dependency
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-2d48fa94-a346-493d-b28c-b1a2d9d62ebc;1.0
+	confs: [default]
+	found com.mysql#mysql-connector-j;8.4.0 in central
+	found com.google.protobuf#protobuf-java;3.25.1 in central
+:: resolution report :: resolve 160ms :: artifacts dl 5ms
+	:: modules in use:
+	com.google.protobuf#protobuf-java;3.25.1 from central in [default]
+	com.mysql#mysql-connector-j;8.4.0 from central in [default]
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|      default     |   2   |   0   |   0   |   0   ||   2   |   0   |
+	---------------------------------------------------------------------
+:: retrieving :: org.apache.spark#spark-submit-parent-2d48fa94-a346-493d-b28c-b1a2d9d62ebc
+	confs: [default]
+	0 artifacts copied, 2 already retrieved (0kB/7ms)
+26/11/15 20:55:06 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+/home/cs179g/miniconda3/envs/cs179/lib/python3.11/site-packages/pyspark/python/lib/pyspark.zip/pyspark/testing/utils.py:127: FutureWarning: PySpark does not yet fully support pandas >= 3.0.0. Some features may not work correctly. It is recommended to use pandas < 3.0.0 for now.
+Using Spark's default log4j profile: org/apache/spark/log4j2-defaults.properties
+26/11/15 20:55:08 INFO SparkContext: Running Spark version 4.2.0
+26/11/15 20:55:08 INFO SparkContext: OS info Linux, 5.15.0-203-generic, amd64
+26/11/15 20:55:08 INFO SparkContext: Java version 17.0.18-internal+0-adhoc.rattler.src
+26/11/15 20:55:08 INFO ResourceUtils: ==============================================================
+26/11/15 20:55:08 INFO ResourceUtils: No custom resources configured for spark.driver.
+26/11/15 20:55:08 INFO ResourceUtils: ==============================================================
+26/11/15 20:55:08 INFO SparkContext: Submitted application: Pivot_Adolfo_Movement_Timing
+26/11/15 20:55:08 INFO SecurityManager: Changing view acls to: cs179g
+26/11/15 20:55:08 INFO SecurityManager: Changing modify acls to: cs179g
+26/11/15 20:55:08 INFO SecurityManager: Changing view acls groups to: cs179g
+26/11/15 20:55:08 INFO SecurityManager: Changing modify acls groups to: cs179g
+26/11/15 20:55:08 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: cs179g groups with view permissions: EMPTY; users with modify permissions: cs179g; groups with modify permissions: EMPTY; RPC SSL disabled
+26/11/15 20:55:08 INFO Utils: Successfully started service 'sparkDriver' on port 40379.
+26/11/15 20:55:08 INFO SparkEnv: Registering MapOutputTracker
+26/11/15 20:55:08 INFO SparkEnv: Registering BlockManagerMaster
+26/11/15 20:55:08 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+26/11/15 20:55:08 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+26/11/15 20:55:08 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+26/11/15 20:55:08 INFO DiskBlockManager: Created local directory at /tmp/blockmgr-b9d42914-1921-4e9b-af17-9d2c8ba49d54
+26/11/15 20:55:08 INFO SparkEnv: Registering OutputCommitCoordinator
+26/11/15 20:55:08 INFO JettyUtils: Start Jetty 0.0.0.0:4040 for SparkUI
+26/11/15 20:55:08 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+26/11/15 20:55:08 INFO SparkContext: Added JAR file:///home/cs179g/.ivy2.5.2/jars/com.mysql_mysql-connector-j-8.4.0.jar at spark://class-146.cs.ucr.edu:40379/jars/com.mysql_mysql-connector-j-8.4.0.jar with timestamp 1794804908132
+26/11/15 20:55:08 INFO SparkContext: Added JAR file:///home/cs179g/.ivy2.5.2/jars/com.google.protobuf_protobuf-java-3.25.1.jar at spark://class-146.cs.ucr.edu:40379/jars/com.google.protobuf_protobuf-java-3.25.1.jar with timestamp 1794804908132
+26/11/15 20:55:08 INFO SparkContext: Added file file:///home/cs179g/.ivy2.5.2/jars/com.mysql_mysql-connector-j-8.4.0.jar at file:///home/cs179g/.ivy2.5.2/jars/com.mysql_mysql-connector-j-8.4.0.jar with timestamp 1794804908132
+26/11/15 20:55:08 INFO Utils: Copying /home/cs179g/.ivy2.5.2/jars/com.mysql_mysql-connector-j-8.4.0.jar to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.mysql_mysql-connector-j-8.4.0.jar
+26/11/15 20:55:08 INFO SparkContext: Added file file:///home/cs179g/.ivy2.5.2/jars/com.google.protobuf_protobuf-java-3.25.1.jar at file:///home/cs179g/.ivy2.5.2/jars/com.google.protobuf_protobuf-java-3.25.1.jar with timestamp 1794804908132
+26/11/15 20:55:08 INFO Utils: Copying /home/cs179g/.ivy2.5.2/jars/com.google.protobuf_protobuf-java-3.25.1.jar to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.google.protobuf_protobuf-java-3.25.1.jar
+26/11/15 20:55:09 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(cores -> name: cores, amount: 1, script: , vendor: , memory -> name: memory, amount: 1024, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+26/11/15 20:55:09 INFO ResourceProfile: Limiting resource is cpu
+26/11/15 20:55:09 INFO ResourceProfileManager: Added ResourceProfile id: 0
+26/11/15 20:55:09 INFO SecurityManager: Changing view acls to: cs179g
+26/11/15 20:55:09 INFO SecurityManager: Changing modify acls to: cs179g
+26/11/15 20:55:09 INFO SecurityManager: Changing view acls groups to: cs179g
+26/11/15 20:55:09 INFO SecurityManager: Changing modify acls groups to: cs179g
+26/11/15 20:55:09 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: cs179g groups with view permissions: EMPTY; users with modify permissions: cs179g; groups with modify permissions: EMPTY; RPC SSL disabled
+26/11/15 20:55:09 INFO Executor: Starting executor ID driver on host class-146.cs.ucr.edu
+26/11/15 20:55:09 INFO Executor: Running Spark version 4.2.0
+26/11/15 20:55:09 INFO Executor: OS info Linux, 5.15.0-203-generic, amd64
+26/11/15 20:55:09 INFO Executor: Java version 17.0.18-internal+0-adhoc.rattler.src
+26/11/15 20:55:09 INFO Executor: Starting executor with user classpath (userClassPathFirst = false): ''
+26/11/15 20:55:09 INFO Executor: Created or updated repl class loader org.apache.spark.util.MutableURLClassLoader@28473721 for default.
+26/11/15 20:55:09 INFO Executor: Fetching file:///home/cs179g/.ivy2.5.2/jars/com.mysql_mysql-connector-j-8.4.0.jar with timestamp 1794804908132
+26/11/15 20:55:09 INFO Utils: /home/cs179g/.ivy2.5.2/jars/com.mysql_mysql-connector-j-8.4.0.jar has been previously copied to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.mysql_mysql-connector-j-8.4.0.jar
+26/11/15 20:55:09 INFO Executor: Fetching file:///home/cs179g/.ivy2.5.2/jars/com.google.protobuf_protobuf-java-3.25.1.jar with timestamp 1794804908132
+26/11/15 20:55:09 INFO Utils: /home/cs179g/.ivy2.5.2/jars/com.google.protobuf_protobuf-java-3.25.1.jar has been previously copied to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.google.protobuf_protobuf-java-3.25.1.jar
+26/11/15 20:55:09 INFO Executor: Fetching spark://class-146.cs.ucr.edu:40379/jars/com.mysql_mysql-connector-j-8.4.0.jar with timestamp 1794804908132
+26/11/15 20:55:09 INFO TransportClientFactory: Successfully created connection to class-146.cs.ucr.edu/169.235.28.146:40379 after 32 ms (0 ms spent in bootstraps)
+26/11/15 20:55:09 INFO Utils: Fetching spark://class-146.cs.ucr.edu:40379/jars/com.mysql_mysql-connector-j-8.4.0.jar to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/fetchFileTemp11132032829274278750.tmp
+26/11/15 20:55:09 INFO Utils: /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/fetchFileTemp11132032829274278750.tmp has been previously copied to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.mysql_mysql-connector-j-8.4.0.jar
+26/11/15 20:55:09 INFO Executor: Adding file:/tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.mysql_mysql-connector-j-8.4.0.jar to class loader default
+26/11/15 20:55:09 INFO Executor: Fetching spark://class-146.cs.ucr.edu:40379/jars/com.google.protobuf_protobuf-java-3.25.1.jar with timestamp 1794804908132
+26/11/15 20:55:09 INFO Utils: Fetching spark://class-146.cs.ucr.edu:40379/jars/com.google.protobuf_protobuf-java-3.25.1.jar to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/fetchFileTemp17872543086290568264.tmp
+26/11/15 20:55:09 INFO Utils: /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/fetchFileTemp17872543086290568264.tmp has been previously copied to /tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.google.protobuf_protobuf-java-3.25.1.jar
+26/11/15 20:55:09 INFO Executor: Adding file:/tmp/spark-604a4083-7d25-42ca-a9a3-878e9d09fef0/userFiles-25b08782-0a27-4c5a-a93b-390590c00740/com.google.protobuf_protobuf-java-3.25.1.jar to class loader default
+26/11/15 20:55:09 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 38761.
+26/11/15 20:55:09 INFO NettyBlockTransferService: Server created on class-146.cs.ucr.edu:38761
+26/11/15 20:55:09 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+26/11/15 20:55:09 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, class-146.cs.ucr.edu, 38761, None)
+26/11/15 20:55:09 INFO BlockManagerMasterEndpoint: Registering block manager class-146.cs.ucr.edu:38761 with 434.4 MiB RAM, BlockManagerId(driver, class-146.cs.ucr.edu, 38761, None)
+26/11/15 20:55:09 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, class-146.cs.ucr.edu, 38761, None)
+26/11/15 20:55:09 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, class-146.cs.ucr.edu, 38761, None)
+{"run_id": "f025-local2", "master": "local[2]", "data_fraction": 0.25, "rows_processed": 19151759, "selected_plays": 66780, "retained_output_plays": 63864, "excluded_plays": 2916, "output_rows": {"play_features": 63864, "movement_summary": 20}, "seconds": 60.950281249999534, "appended": true}

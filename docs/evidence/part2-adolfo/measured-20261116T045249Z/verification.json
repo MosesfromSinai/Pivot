@@ -1,0 +1,113 @@
+{
+  "status": "verified",
+  "suite_id": "c02d1a57-1df9-41b3-b867-e4a5694b7499",
+  "measured_commit": "fd9d641f14e7ff5a0b47e05d1de93a40c2a4dd11",
+  "successful_appended_runs": 8,
+  "source_files_verified": 9,
+  "paired_subsets_and_counts_match": true,
+  "sequential_order_verified": true,
+  "per_run_records_commands_schemas_and_log_footers_match": true,
+  "mysql_timestamp_interpretation": "PST (UTC-08:00); consistent with every run's append window",
+  "mysql_matches": [
+    {
+      "run_id": "f025-local1",
+      "mysql_run_id": 1,
+      "mysql_run_at": "2026-11-15 20:55:03",
+      "seconds": 95.10520501000428
+    },
+    {
+      "run_id": "f025-local2",
+      "mysql_run_id": 2,
+      "mysql_run_at": "2026-11-15 20:56:33",
+      "seconds": 60.950281249999534
+    },
+    {
+      "run_id": "f050-local1",
+      "mysql_run_id": 3,
+      "mysql_run_at": "2026-11-15 20:59:47",
+      "seconds": 145.5446007040009
+    },
+    {
+      "run_id": "f050-local2",
+      "mysql_run_id": 4,
+      "mysql_run_at": "2026-11-15 21:01:52",
+      "seconds": 88.01845323300222
+    },
+    {
+      "run_id": "f075-local1",
+      "mysql_run_id": 5,
+      "mysql_run_at": "2026-11-15 21:06:06",
+      "seconds": 193.5946109919969
+    },
+    {
+      "run_id": "f075-local2",
+      "mysql_run_id": 6,
+      "mysql_run_at": "2026-11-15 21:08:41",
+      "seconds": 113.73382128599769
+    },
+    {
+      "run_id": "f100-local1",
+      "mysql_run_id": 7,
+      "mysql_run_at": "2026-11-15 21:13:40",
+      "seconds": 230.79326240000228
+    },
+    {
+      "run_id": "f100-local2",
+      "mysql_run_id": 8,
+      "mysql_run_at": "2026-11-15 21:16:32",
+      "seconds": 127.00318138299917
+    }
+  ],
+  "final_table_counts": {
+    "play_features": 0,
+    "movement_summary": 0
+  },
+  "full_data_retained_plays": 255329,
+  "timing_table": [
+    {
+      "data_fraction": 0.25,
+      "rows_processed": 19151759,
+      "selected_plays": 66780,
+      "retained_output_plays": 63864,
+      "excluded_plays": 2916,
+      "local1_seconds": 95.10520501000428,
+      "local2_seconds": 60.950281249999534,
+      "speedup_1_over_2": 1.5603735218203774
+    },
+    {
+      "data_fraction": 0.5,
+      "rows_processed": 38227233,
+      "selected_plays": 133604,
+      "retained_output_plays": 127722,
+      "excluded_plays": 5882,
+      "local1_seconds": 145.5446007040009,
+      "local2_seconds": 88.01845323300222,
+      "speedup_1_over_2": 1.6535691705319522
+    },
+    {
+      "data_fraction": 0.75,
+      "rows_processed": 57336744,
+      "selected_plays": 200541,
+      "retained_output_plays": 191761,
+      "excluded_plays": 8780,
+      "local1_seconds": 193.5946109919969,
+      "local2_seconds": 113.73382128599769,
+      "speedup_1_over_2": 1.702172746883967
+    },
+    {
+      "data_fraction": 1.0,
+      "rows_processed": 76366748,
+      "selected_plays": 266960,
+      "retained_output_plays": 255329,
+      "excluded_plays": 11631,
+      "local1_seconds": 230.79326240000228,
+      "local2_seconds": 127.00318138299917,
+      "speedup_1_over_2": 1.8172242607372715
+    }
+  ],
+  "limits": [
+    "Reconciles archived evidence; does not query the server or reread raw Parquet outputs.",
+    "Subset fingerprints are consistency checks, not cryptographic proofs of row equality.",
+    "MySQL export has no experiment ID; rows are matched by values and append windows."
+  ]
+}

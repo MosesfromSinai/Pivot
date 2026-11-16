@@ -5,10 +5,18 @@ Due November 18, 2026. Owner: Adolfo Magallanes (GorillaAdolfo).
 This implementation supplies timing orchestration, evidence validation, and plotting.
 Joshua's job arrived in `origin/main` at `b38a02a` (PR #6) and was merged into this
 published branch without rewriting either history. `movement_adapter.py` now calls
-the shared, import-safe `build_features` in `02_movement_features.py`. No real
-performance results exist yet; Spark fixture and smoke validation remain for the
-server. Joshua's reported full-data count of 255,329 is a comparison to investigate
-on the same dataset, never a hardcoded expected output count.
+the shared, import-safe `build_features` in `02_movement_features.py`.
+The required measured suite completed at pinned commit
+`fd9d641f14e7ff5a0b47e05d1de93a40c2a4dd11`: all eight configurations succeeded,
+appended timings and matched the MySQL export. Both full-data runs retained
+255,329 plays, matching Joshua's reported comparison for this dataset. This is
+not a universal hardcoded expected count. Server tests and smoke also passed.
+See [Adolfo's report](../docs/part2_adolfo.md) and the
+[curated measured evidence](../docs/evidence/part2-adolfo/README.md) for the final
+table, visually checked graph, provenance and limitations. PR #5 remains a draft
+for human graph/report review; final movement-table publishing is still Joshua's
+separate pending task. The procedures below describe the workflow, not a request
+to rerun the completed suite or update its pinned server checkout.
 
 ## Routine sanity check
 
@@ -227,7 +235,8 @@ python part2_spark/run_timing.py --adapter "$adapter" --data-root /home/cs179g/n
 The smoke test selects about 1% of play keys on local[1], validates isolated outputs,
 and **does not insert into timing_results**. Review its `summary.json`, `run.log`,
 row counts, retained/excluded plays, and output schemas before launching the
-required matrix. The full launch is held for the human smoke-output checkpoint.
+required matrix. That checkpoint was satisfied for the archived measured suite;
+its final evidence is linked above and should be preserved without replacement.
 
 Every child command includes `--master 'local[1]'` or `--master 'local[2]'` and
 `--packages com.mysql:mysql-connector-j:8.4.0`. Commands are saved as exact argv

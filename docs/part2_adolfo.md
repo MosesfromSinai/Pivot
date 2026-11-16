@@ -1,183 +1,285 @@
-# Adolfo's Part 2 report material
+# Adolfo's Part 2 timing report draft
 
-Status: movement integration and server smoke validated; server Spark fixture
-results and the eight required measurements remain pending. PR #5 remains a draft.
-Do not present fixture values or unrun procedures as results.
+Status: the eight measured configurations are complete and reconciled with MySQL.
+The final timing table and graph are ready for Adolfo's review and insertion into
+the shared report. PR #5 remains a draft. Joshua's final movement-table publishing
+is still pending and is a separate team task.
 
-## Server preflight evidence supplied by Adolfo
+## Timing method and implementation
 
-The following observations come from Adolfo's pasted server terminal output,
-not from a connection made by the local assistant. The transcript does not
-include a collection timestamp; record that with the eventual benchmark logs.
+Adolfo ran the required matrix on `class-146` in conda environment `cs179`, from
+`/home/cs179g/Pivot-adolfo-timing`. **The measured code version is
+`fd9d641f14e7ff5a0b47e05d1de93a40c2a4dd11`**. Later documentation, evidence-review
+and plotting commits are not the version measured on the server. Suite
+`c02d1a57-1df9-41b3-b867-e4a5694b7499` ran from
+`2026-11-16T04:52:49Z` to `05:16:33Z` (November 15, 2026,
+8:52:49-9:16:33 p.m. PST). The suite window includes startup, validation and
+inserts; it is not the sum of the measured transformation intervals.
 
-| Check | Observed value |
-|---|---|
-| Host | `class-146.cs.ucr.edu` |
-| Activated conda environment | `cs179` |
-| Python | `3.11.17` |
-| Spark | `4.2.0` |
-| Scala | `2.13.18` |
-| Java | OpenJDK `17.0.18-internal` |
-| MySQL server (via socket and TCP) | `5.7.20`, port `3307` |
-| Cleaned input directories | `kaggle_tracking`, `kaggle_plays`, `kaggle_injuries` exist |
-| Database tables | All five expected Part 2 tables exist |
-| Existing timing rows | `0` at preflight; not a permanent assertion |
-| Filesystem free space | `50G` available of `194G`, `75%` used at preflight |
-| Shared checkout | `part2-moses` at `8e65c5a`, tracking `origin/part2-moses` |
-| Shared untracked file | `part1_collection/clean_output.txt`; preserve it |
-| Server Part 2 file listing | `01_injury_rates.py`, `common.py`, `schema.sql`; no movement job shown |
+`part2_spark/run_timing.py` launched eight fresh `spark-submit` processes in order:
+25%, 50%, 75%, 100%, with `local[1]` followed by `local[2]` at every fraction.
+These settings mean one and two **local execution threads**, not separate worker
+processes or a multi-machine cluster. The shared MySQL field is named `workers`;
+that column name does not change the execution model.
 
-The live `timing_results` definition matches the inspected schema: auto-generated
-`run_id INT` and `run_at TIMESTAMP`, required `workers INT`, `data_fraction DOUBLE`,
-`seconds DOUBLE`, and nullable `rows_processed BIGINT`. Engine: InnoDB.
+`benchmark_movement.py` selects complete PlayKey trajectories using
+`pmod(xxhash64(179, cast(PlayKey as string)), 1000000)` and thresholds 250000,
+500000 and 750000. The 100% case includes all tracking rows. Hash fractions refer
+to play-key buckets, not exact row percentages: actual tracking-row fractions
+were approximately 25.079%, 50.057%, 75.081% and 100%. Both thread counts use the
+same deterministic subset at each size. The selected tracking frame is passed to
+`movement_adapter.py`, which calls the import-safe `build_features` function in
+Joshua's `02_movement_features.py`. The normal full job calls that same function.
+The refactor preserved his movement formulas, event boundaries, joins and output
+columns; it did not copy those calculations into another implementation.
 
-At that earlier preflight, TCP client access succeeded at `127.0.0.1:3307`, but
-Spark/JDBC loading, reads and the movement entry point were still unverified.
-The later smoke evidence below establishes input reads and movement execution,
-and JDBC package loading. JDBC authentication/inserts remain untested. Available
-disk space must be checked again before the required matrix; optional physical
-subsets have not been prepared or sized.
+The monotonic `time.perf_counter()` interval in `benchmark_movement.py` begins
+**after Spark session startup, immediately before reading the three cleaned
+Parquet datasets**, and ends **after both complete output DataFrames have been
+written as isolated Parquet outputs**. It includes input reads, complete-play
+selection, feature/summary transformations, plan construction/schema checks, and
+full-column Parquet materialization. Writing every output column forces real
+movement computation rather than timing only lazy plan construction. The two
+output plans can recompute common work; that cost is included consistently.
+Neither the driver nor the shared transformations persist DataFrames for these
+measurements, and each configuration runs in a fresh process.
 
-Preserve the shared checkout on Moses's branch and leave its untracked log intact.
-Use the separate-worktree procedure in `part2_spark/TIMING.md` after the reviewed
-Adolfo branch has been pushed. Neither local commit `558fc6c` nor its source files
-are implied to be present in the shared server checkout.
+Excluded: Python/JVM/package startup, Spark session startup, initial input-file
+metadata collection, post-write validation/counting/fingerprinting, and appending
+the timing record to MySQL. Spark session startup was separately recorded at
+4.056-4.325 seconds per run. **These timings include isolated Parquet output and
+exclude final analysis-table JDBC publishing.** After validation, the shared
+`common.write_table` helper appended one row to `timing_results` using explicit
+`mode="append"`; benchmark execution did not publish final analysis tables.
 
-## Server smoke evidence supplied by Adolfo
+Recorded server versions/settings: Python 3.11.17, Spark 4.2.0, Java
+17.0.18-internal, MySQL 5.7.20 on TCP port 3307, Connector/J 8.4.0, 200 shuffle
+partitions and adaptive execution enabled. Default parallelism was respectively
+1 and 2; the other recorded settings matched throughout. Driver/executor memory
+and session timezone were recorded as `unset`, so no explicit memory allocation
+is inferred from them. Exact JVM options are retained in the JSON evidence.
+The input manifest covered 72 files totaling 755,324,331 bytes across the three
+datasets; that is not a measured per-fraction physical file size.
 
-Adolfo reported that MySQL had stopped and the documented startup script was
-missing. The existing MySQL 5.7.20 installation was restarted using its existing
-data directory and resumed accepting TCP connections on port 3307. This recovery
-was performed by the server users, not the local assistant. No restart commands
-or changes to shared infrastructure were performed by the benchmark.
+## Measured evaluation table and graph
 
-The supplied terminal transcript records a successful smoke suite at
-`2026-11-16T04:47:39Z` through `04:48:51Z` (November 15, 2026, approximately
-8:47-8:48 p.m. PST). Testing worktree: `/home/cs179g/Pivot-adolfo-timing`, clean
-at `fd9d641f14e7ff5a0b47e05d1de93a40c2a4dd11`. Evidence directory:
-`/home/cs179g/pivot_timing/smoke-20261116T044739Z`; suite ID:
-`2ca90c13-e201-43e6-91b9-c4d8b47f80ba`.
+Each cell is one measured trial. Seconds and ratios below are rounded to three
+decimals; the archived JSON/CSV preserves full precision. Retained/excluded counts
+match across the two thread counts, so each fraction has one shared count row.
+`T1/T2` is the observed ratio of one-thread time to two-thread time.
 
-| Smoke observation | Value |
-|---|---|
-| Host / Python / Spark | `class-146` / `3.11.17` / `4.2.0` |
-| Master / fraction / seed | `local[1]` / `0.01` / `179` |
-| Selected tracking rows | 778,421 |
-| Selected PlayKeys | 2,772 |
-| Retained play-feature outputs | 2,658 |
-| Excluded selected plays | 114 (4.11%) |
-| Movement summary groups | 20 |
-| Measured smoke boundary | 45.238648456 seconds |
-| Session startup (excluded) | 3.998954075 seconds |
-| Shuffle partitions / adaptive execution | `200` / `true` |
-| Status / process exit / appended | `success` / `0` / `false` |
-| MySQL counts before and after | `play_features=0`, `movement_summary=0`, `timing_results=0` |
+| Fraction | Actual tracking rows | Selected plays | Retained plays | Excluded plays | local[1] (s) | local[2] (s) | T1/T2 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 25% | 19,151,759 | 66,780 | 63,864 | 2,916 | 95.105 | 60.950 | 1.560 |
+| 50% | 38,227,233 | 133,604 | 127,722 | 5,882 | 145.545 | 88.018 | 1.654 |
+| 75% | 57,336,744 | 200,541 | 191,761 | 8,780 | 193.595 | 113.734 | 1.702 |
+| 100% | 76,366,748 | 266,960 | 255,329 | 11,631 | 230.793 | 127.003 | 1.817 |
 
-The local assistant parsed the pasted summary, checked its count arithmetic and
-success metadata, and verified all nine recorded Python source SHA-256 values
-against the pinned Git blobs. The worker reported successful saved-output checks
-for primary keys, required fields, subset membership and summary group counts.
-Recorded output columns/types match the intended movement schema. Spark schema
-nullable flags for some required fields do not indicate observed nulls; the run's
-validation checks actual values. The before/after queries show both final
-movement tables empty at those two checkpoints; they are not continuous auditing.
+![Measured movement-feature execution time against actual selected tracking rows, comparing one and two local execution threads.](evidence/part2-adolfo/measured-20261116T045249Z/report/timing_plot.png)
 
-The logs show MySQL Connector/J 8.4.0 loaded. Smoke mode did not call the timing
-JDBC writer, so successful MySQL authentication/inserts from Spark remain pending.
-The transcript does not include the opt-in synthetic Spark fixture test output;
-run that check before the required matrix, or supply its earlier successful log.
-The 45.24-second smoke observation is not one of the eight required measurements,
-and does not establish speedup. The hash-filtered 1% subset may still scan full
-input files. Keep this smoke directory intact and keep the server checkout pinned
-through the required matrix; documentation-only follow-up commits need not be
-fetched into the testing worktree.
+Figure 1. Movement-feature computation plus isolated Parquet output at measured
+commit `fd9d641`. The horizontal axis gives actual selected tracking rows (in
+millions); the vertical axis gives elapsed seconds. The legend identifies local
+execution threads. Lines connect the four observed points for each setting;
+there are no repeated-trial averages or error bars.
 
-## Implementation entry (draft)
+Use the original [PNG](evidence/part2-adolfo/measured-20261116T045249Z/report/timing_plot.png)
+or [SVG](evidence/part2-adolfo/measured-20261116T045249Z/report/timing_plot.svg)
+in the shared report. The [generated Markdown table](evidence/part2-adolfo/measured-20261116T045249Z/report/timing_table.md)
+and [CSV](evidence/part2-adolfo/measured-20261116T045249Z/report/timing_table.csv)
+come from the existing `plot_timing.py`, without fixture/partial-result options.
+The graph was visually inspected locally for complete axes, readable legend,
+correct units and all eight measured points. Its postprocessing environment is
+recorded separately and is not the measured server environment.
 
-`run_timing.py` launches the movement-feature benchmark sequentially for four
-deterministic, play-preserving fractions on local[1] and local[2].
-`benchmark_movement.py` invokes Joshua's movement transformations through a
-reviewed adapter, verifies the active Spark master, materializes isolated outputs,
-validates them, and appends successful timing rows through the shared MySQL helper.
-It leaves the team's final movement tables untouched. `plot_timing.py` validates
-the evidence and exports the timing table and execution-time graph.
+## Discussion of observed scaling
 
-`movement_adapter.py` delegates to `02_movement_features.py:build_features`.
-The normal script's explicit `main()` calls that same function and retains its
-full-data preview/publish behavior. Only the full job caches play features; it
-unpersists them and stops Spark even on failure. The benchmark does not cache,
-start another session, reread tracking, or call the full job's publishing entry.
-The transformation syntax tree was checked against Joshua's merged implementation:
-calculations and filters match, excluding persistence moved to the full entry.
+Two local threads reduced elapsed time at every measured size. The observed
+ratios T1/T2 were 1.560, 1.654, 1.702 and 1.817 as the selected workload increased.
+Relative time reductions were 35.9%, 39.5%, 41.3% and 45.0%, respectively. At full
+size, 230.793 seconds fell to 127.003 seconds, a reduction of 103.790 seconds.
+This supports an observed benefit from two local threads for this job and suite;
+it does not establish distributed-cluster scaling or repeatable statistical gains.
 
-Local verification: 22 tests discovered, 20 passed; the real Spark fixture and
-Matplotlib rendering test skipped because these packages are absent locally.
-Both benchmark plans and Python compilation passed. Local mocks are correctness
-checks, not server or performance evidence. The opt-in Spark fixture checks valid
-and excluded event boundaries, metadata filtering, known feature values, column
-types, output validation failures, and repeated calls without persisted frames.
-Its server result is still pending in the supplied evidence; run it before the matrix.
+Selected tracking rows increased by about 3.99 times between the smallest and
+full workload, while elapsed time increased by about 2.43 times for one thread
+and 2.08 times for two threads. Both curves rose monotonically, and the observed
+thread benefit increased with workload. Fixed work, full-source scans and
+scheduling/output costs are plausible contributors to the less-than-proportional
+time growth; no CPU, disk, cache or concurrent-load profiling was collected to
+identify a specific bottleneck.
 
-Output validation permits legitimate exclusions. It checks unique, non-null
-output keys, required metadata, output membership in the selected tracking keys,
-and exact per-group agreement between `movement_summary.plays` and `play_features`.
-Evidence records selected tracking rows, selected keys, retained output plays,
-and total exclusions separately. Exclusions combine boundary/metadata effects;
-they are not a per-reason audit. Joshua reported 255,329 full-data player-play
-outputs; compare that only against a full run of the same dataset and investigate
-differences. It is not a universal assertion or a timing observation.
+The interpretation has several limits. There was one trial per configuration,
+so variance and confidence intervals cannot be estimated. Execution order was
+fixed, with the one-thread run first at each size, and fractions increased in
+order. The smoke test, fixture tests, preceding benchmarks and validation scans
+could warm filesystem/OS caches; no shared caches were cleared. Fresh Spark
+processes prevent persisted DataFrames from carrying over, but do not remove
+those OS cache effects. Other activity on the shared server could affect timings;
+its load was not continuously measured or controlled.
 
-The smoke validates the integrated path at the pinned commit recorded above.
-Required-matrix validation, MySQL timing inserts, and matching subsets across
-both masters remain pending. Joshua's pending full-data MySQL publishing remains
-his separate step and is not performed by benchmark runs.
+Hash filtering may still scan the full source Parquet files at every fraction.
+No smaller physical datasets were created or verified. Consequently these
+results scale selected computation/output rows, not guaranteed reduced source
+I/O, and the measured 25% configuration is not a quarter-size file read. The
+boundary also includes isolated Parquet output and possible common-plan
+recomputation, while excluding startup, validation and timing JDBC insertion.
+A 1.817 ratio therefore describes this particular boundary, not production MySQL
+publishing time or a universal speedup for Spark workloads.
 
-## Timing evidence to insert after server runs
+## Correctness, provenance and MySQL verification
 
-- Server hostname, date/time window, actual conda/Python/Spark/Java versions.
-- Reviewed commit hash, source hashes, adapter and Joshua job names.
-- Timing boundary: session startup excluded; reads, filtering, computation, and
-  isolated Parquet output included; validation and timing-record JDBC insert excluded.
-- `timing_table.md` and `timing_plot.png` from one complete validated suite.
-- Actual tracking rows, selected keys, retained outputs and exclusions at each fraction; same subset fingerprints
-  for both masters. Explain hash fractions versus actual row percentages.
-- Commands, successful/failing run logs, MySQL evidence, screenshot, and final-table
-  preservation check. Retain failures rather than counting them as measurements.
+All eight summary records and per-run `result.json` files report `success`,
+`phase="complete"`, `appended=true`, and process exit code 0. Per-run commands
+request the intended master, fraction, seed, Connector/J package and
+`--record-timing`. Worker startup markers, command timestamps and completion
+times establish the sequential order. The final JSON log summaries agree with
+the result records. All nine recorded Python source hashes match Git blobs at
+`fd9d641`, and every run records a clean checkout at that commit.
 
-## Discussion outline (fill from observed measurements)
+Within each thread pair, selected-row counts, selected PlayKeys, full-row
+fingerprint sums, retained/excluded counts and summary row counts match. Input
+metadata hashes, source hashes, host, Spark version and common recorded settings
+also match across the suite. The order-independent fingerprint is a consistency
+check, not a cryptographic proof of identical rows. Input metadata SHA-256 is
+`c84d3e7f924201142a5ac3aecead30f0cf7ff31600c4d8336ddea3c0bb8d79af`.
 
-1. Describe how time changes across the four actual tracking-row counts for each
-   master. Report seconds and the ratio T(local[1])/T(local[2]) at each size.
-2. State whether two local threads helped, by how much, and where the effect varied.
-   Do not call them separate worker processes. Confirm the rubric interpretation
-   with the TA before claiming distributed-worker scaling.
-3. Interpret observed behavior cautiously: full-input scans during hash filtering,
-   Spark scheduling/shuffle overhead, output I/O, repeated computation, fixed job
-   overhead, OS cache warming, and concurrent server activity are possible factors.
-   Distinguish measured evidence from proposed explanations; do not assert an
-   unmeasured CPU/I/O bottleneck as fact.
-4. Explain that these timings include isolated Parquet output rather than production
-   JDBC analysis writes, and exclude startup/validation. One run per configuration
-   does not estimate variance. Label any additional repetitions separately.
+The measured driver validates saved outputs for unique/non-null primary keys,
+required non-null metadata, membership in the selected tracking keys, and exact
+per-surface/position count agreement between `movement_summary` and
+`play_features`. Every run produced 20 summary groups. At full size both runs
+retained **255,329 plays** from 266,960 selected keys, excluding 11,631 (4.36%).
+This matches Joshua's reported full-data output count. It is a comparison on this
+dataset, not a universal expected count or independent proof of every feature's
+numerical correctness. Exclusions combine boundary/metadata effects, without a
+per-reason breakdown. Raw Parquet outputs remain outside the committed archive;
+local review reconciled evidence rather than recomputing the dataset.
 
-## Contribution so far
+The [MySQL export](evidence/part2-adolfo/measured-20261116T045249Z/mysql-verification.txt)
+contains eight distinct timing rows, IDs 1-8. In configuration order each row
+matches the worker's thread count, fraction, actual tracking-row count and
+full-precision seconds. Interpreting the export's unzoned timestamps as PST
+places each insert inside its recorded validation-to-completion window. This
+confirms an exported timing row for every successful measurement, without
+retries or duplicate matching rows in this export. The shared table has no
+experiment ID; these matches use values and append windows and do not assert
+that the shared database will always contain exactly eight rows.
 
-Adolfo Magallanes implemented the timing runner, evidence validation and plotting
-tools, merged Joshua's delivered movement job into the timing branch, and exposed
-the original transformations through a shared import-safe function and real
-benchmark adapter. Local correctness checks passed as described above, and Adolfo
-ran a successful server smoke with retained/excluded counts and unchanged empty
-final tables. The eight required runs, MySQL timing inserts, final graph/table
-and measured discussion remain pending; no speedup has been established.
+The same export shows **`play_features=0` and `movement_summary=0`**. Before the
+smoke these tables were also empty. These are observed checkpoints, not
+continuous table auditing. The 255,329 feature rows are isolated benchmark
+outputs, not published MySQL analysis rows. **Joshua's full-data MySQL publishing
+remains a separate pending team task.** No such publishing was performed by
+Adolfo's benchmark or the local assistant. Team coordination must preserve the
+timing rows and unrelated results; no schema recreation or table replacement is
+part of this report work.
 
-## Contribution text (use only after completion)
+## Correctness fixtures and earlier smoke (separate evidence)
 
-Adolfo Magallanes implemented and tested the timing runner and plotting tools,
-integrated Joshua's movement-feature code for benchmarking, ran the eight required
-configurations on class-146, appended validated timings to MySQL, and prepared
-the timing table, graph, evidence, and scaling discussion.
+Adolfo confirmed that the opt-in server tests completed before the measured
+suite: 22 tests ran, OK, with one skip because Matplotlib was missing (21 passed).
+Those synthetic tests cover valid/excluded boundaries, metadata filtering, known
+feature values, schemas, validation failures, shared-function delegation, import
+safety and cleanup/repeated calls. This test result is user-reported; the
+transferred measured archive does not include its terminal log. Local plotting
+and logic checks are recorded separately from server execution: the plotting
+virtual environment ran all 22 tests, with 21 passing (including graph rendering)
+and the server-only Spark fixture skipped. Evidence reconciliation and report-link
+checks also passed locally; none of these local checks are performance trials.
 
-The preceding text is a completion template, not a statement of work already run.
-Current completed work must be described separately from pending validation and
-server execution. Moses owns infrastructure/H1, Joshua owns movement calculations,
-and Colin owns the nflverse analysis.
+The earlier 1%/local[1] smoke suite at `2026-11-16T04:47:39Z` selected 778,421
+tracking rows and 2,772 keys, retained 2,658 plays, excluded 114 and produced 20
+summary groups. Its boundary took 45.239 seconds and `appended=false`; database
+counts were 0/0/0 before and after. That diagnostic observation is excluded from
+the measured table, graph and eight MySQL rows. Fixture previews are synthetic
+and are also excluded. Prior MySQL recovery used the existing installation/data
+directory, as reported by Adolfo; infrastructure recovery was not a benchmark
+operation.
+
+## Adolfo's contribution
+
+Adolfo Magallanes implemented the Part 2 timing runner, deterministic complete-play
+sampling, evidence/provenance checks, output validation and plotting tools. He
+integrated Joshua's movement calculations through one import-safe shared function
+and a real benchmark adapter, preserving the calculations and normal full-job
+entry point. He ran the correctness checks, smoke and eight required configurations
+on class-146, appended the validated timings to MySQL, reconciled the exported
+rows, and prepared the measured table, graph and scaling discussion. Local
+postprocessing used a plotting-only virtual environment; Spark and MySQL were
+not installed locally for this work. Moses owns infrastructure/H1, Joshua owns
+the movement calculations and pending final publishing, and Colin owns the
+nflverse analysis. This contribution does not claim teammates' calculations or
+completion of the final movement-table publishing.
+
+## Exact shared-report and screenshot handoff
+
+The shared report has not been edited. Add only Adolfo's timing material:
+
+1. Under the shared report's Part 2 implementation section, insert the method and
+   script descriptions from **Timing method and implementation** above. Include
+   measured commit `fd9d641`, the timer boundary and the local-thread definition.
+2. Under evaluation, insert the eight-configuration table from **Measured
+   evaluation table and graph**, Figure 1 using the original PNG/SVG, and its
+   caption. Keep the selected/retained/excluded counts and T1/T2 definition. Copy
+   **Discussion of observed scaling** with its limitations; do not substitute the
+   smoke or fixture values or describe the lines as averaged trials.
+3. Add the correctness/MySQL verification paragraph and link the curated evidence
+   directory. Put **Adolfo's contribution** into the contribution section. Preserve
+   teammates' sections. Flag Joshua's final MySQL publishing in the team's pending
+   work rather than marking it complete.
+4. Capture a terminal evidence screenshot using the read-only commands below.
+   Keep the pinned commit, suite ID, suite status and all eight result lines
+   visible. Caption: "Required timing suite at fd9d641; all eight configurations
+   succeeded and appended, with actual selected rows and retained play counts."
+
+**SSH SERVER - read-only measurement screenshot; do not rerun the benchmark:**
+
+```bash
+cd /home/cs179g/Pivot-adolfo-timing
+git rev-parse HEAD
+python - <<'PY'
+import json
+from pathlib import Path
+p = Path('/home/cs179g/pivot_timing/measured-20261116T045249Z/summary.json')
+s = json.loads(p.read_text())
+print('suite:', s['suite_id'], 'status:', s['status'])
+print('measured commit:', s['code']['git_commit'])
+print('master fraction tracking_rows selected retained seconds status appended')
+for r in s['runs']:
+    print(r['master'], r['data_fraction'], r['rows_processed'], r['selected_plays'],
+          r['retained_output_plays'], f"{r['seconds']:.3f}", r['status'], r['appended'])
+PY
+```
+
+5. Capture a separate MySQL screenshot showing the query and all eight rows,
+   plus final-table counts. Caption: "Timing rows 1-8 match the archived suite;
+   final movement-table counts are shown separately." Run only the read-only
+   query below. If Joshua has since published the analysis tables, report that
+   later state separately from the archived zero counts; do not alter any tables
+   to reproduce a screenshot.
+
+**SSH SERVER - read-only MySQL screenshot:**
+
+```bash
+mysql -h 127.0.0.1 -P 3307 -u root pivot -t -vv -e '
+SELECT run_id, workers, data_fraction, rows_processed, seconds, run_at
+FROM timing_results WHERE run_id BETWEEN 1 AND 8 ORDER BY run_id;
+SELECT COUNT(*) AS play_features_rows FROM play_features;
+SELECT COUNT(*) AS movement_summary_rows FROM movement_summary;'
+```
+
+6. Insert `docs/evidence/part2-adolfo/measured-20261116T045249Z/report/timing_plot.png`
+   directly in the report, uncropped. If a separate graph screenshot is required,
+   open that PNG locally and capture the entire title, both axes (including the
+   x-axis multiplier), all eight points and the thread legend. Do not capture the
+   fixture-preview graph. The PNG itself is preferable for report readability.
+7. If an implementation screenshot is required, show `movement_adapter.py` calling
+   the shared `build_features`, then `benchmark_movement.py` lines 214-232 at the
+   measured commit for the timer/read/full-column-write boundary. Lines 122-136
+   show the explicit timing-row schema and append helper. Caption the measured
+   code version, not the later report commit. Add these screenshots to Adolfo's
+   section without replacing teammates' evidence.
+
+The remaining human steps are graph/report review, screenshot capture and shared
+report insertion. Keep PR #5 as a draft until that review is complete; do not merge
+it or update the pinned server checkout as part of this handoff.

@@ -1,0 +1,5 @@
+# Preserve the exported evidence bytes and SHA256SUMS across checkout platforms.
+docs/evidence/part2-adolfo/measured-20261116T045249Z/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Keep native Matplotlib SVG path formatting, which includes trailing spaces.
+docs/evidence/part2-adolfo/measured-20261116T045249Z/report/timing_plot.svg -whitespace
