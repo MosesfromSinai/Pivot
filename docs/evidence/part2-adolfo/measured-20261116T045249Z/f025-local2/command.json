@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "/home/cs179g/miniconda3/envs/cs179/bin/spark-submit",
+    "--master",
+    "local[2]",
+    "--packages",
+    "com.mysql:mysql-connector-j:8.4.0",
+    "/home/cs179g/Pivot-adolfo-timing/part2_spark/benchmark_movement.py",
+    "--adapter",
+    "/home/cs179g/Pivot-adolfo-timing/part2_spark/movement_adapter.py",
+    "--data-root",
+    "/home/cs179g/nfl_data/clean",
+    "--run-dir",
+    "/home/cs179g/pivot_timing/measured-20261116T045249Z/f025-local2",
+    "--suite-id",
+    "c02d1a57-1df9-41b3-b867-e4a5694b7499",
+    "--run-id",
+    "f025-local2",
+    "--workers",
+    "2",
+    "--fraction",
+    "0.25",
+    "--seed",
+    "179",
+    "--record-timing",
+    "--reference-result",
+    "/home/cs179g/pivot_timing/measured-20261116T045249Z/f025-local1/result.json"
+  ],
+  "started_at": "2026-11-16T04:55:04.713590+00:00"
+}

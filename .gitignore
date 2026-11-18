@@ -18,3 +18,9 @@ derby.log
 
 # Node
 node_modules/
+
+# Adolfo's benchmark artifacts (keep real data and local fixtures out of Git)
+timing_runs/
+
+# Curated report evidence; all other CSV data stays excluded.
+!docs/evidence/part2-adolfo/measured-20261116T045249Z/report/timing_table.csv

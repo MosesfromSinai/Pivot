@@ -1,0 +1,187 @@
+{
+  "format_version": 1,
+  "suite_id": "c02d1a57-1df9-41b3-b867-e4a5694b7499",
+  "run_id": "f075-local1",
+  "fixture": false,
+  "kind": "required",
+  "workers": 1,
+  "master": "local[1]",
+  "data_fraction": 0.75,
+  "seed": 179,
+  "hash_buckets": 1000000,
+  "started_at": "2026-11-16T05:01:55.777421+00:00",
+  "status": "success",
+  "phase": "complete",
+  "appended": true,
+  "data_root": "/home/cs179g/nfl_data/clean",
+  "host": "class-146",
+  "python": "3.11.17",
+  "code": {
+    "git_commit": "fd9d641f14e7ff5a0b47e05d1de93a40c2a4dd11",
+    "git_status": "",
+    "source_sha256": {
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/01_injury_rates.py": "c9193953510b204ab0de1bfeb149aa2958fc89f7dd950761ac559ca96cacdaab",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/02_movement_features.py": "bef38086d3b86be9f9615091391ac978ffb2973f9f9bb176aff5c8ef425e947d",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/benchmark_movement.py": "e35d0336b34017827de588be03330396fdbfd37925d77593a3721db192b90416",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/common.py": "543690e98703cfa4e98d20cb7764a7b58c9428ca227988f141f1612ff9f127a8",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/movement_adapter.py": "02b496436876c5f58db55290bf9f7638d9ddc4eeb9022cd1c25dcee6a905de1a",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/movement_adapter_template.py": "9f200b69c71c5aa76a1d613672432f77da993ce1c3d23c785bf1a0ce240569bb",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/plot_timing.py": "9354e7c1877937a05f54fd4769afa713e936ddec30c16c79f4109f5b91ef0aaa",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/run_timing.py": "255be1b0253ef887f031ed17d7113f76fbdf34fcb27d1d732441585c50c40569",
+      "/home/cs179g/Pivot-adolfo-timing/part2_spark/timing_support.py": "51e3e02edc9151fe2f95b686df0f95235208d60b45a008630261abe2be5796dc"
+    }
+  },
+  "input_manifest": {
+    "metadata_sha256": "c84d3e7f924201142a5ac3aecead30f0cf7ff31600c4d8336ddea3c0bb8d79af",
+    "files": 72,
+    "bytes": 755324331
+  },
+  "startup_seconds": 4.148411351001414,
+  "spark_version": "4.2.0",
+  "spark_application_id": "local-1794805317795",
+  "spark_settings": {
+    "default_parallelism": 1,
+    "shuffle_partitions": "200",
+    "adaptive_enabled": "true",
+    "spark.driver.memory": "unset",
+    "spark.executor.memory": "unset",
+    "spark.driver.extraJavaOptions": "-Djava.net.preferIPv6Addresses=false -XX:+IgnoreUnrecognizedVMOptions --add-modules=jdk.incubator.vector --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true -Dio.netty.allocator.type=pooled -Dio.netty.handler.ssl.defaultEndpointVerificationAlgorithm=NONE --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED",
+    "spark.executor.extraJavaOptions": "-Djava.net.preferIPv6Addresses=false -XX:+IgnoreUnrecognizedVMOptions --add-modules=jdk.incubator.vector --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.nio.cs=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED -Dio.netty.tryReflectionSetAccessible=true -Dio.netty.allocator.type=pooled -Dio.netty.handler.ssl.defaultEndpointVerificationAlgorithm=NONE --sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED",
+    "spark.sql.session.timeZone": "unset"
+  },
+  "timing_boundary": "After session startup: input reads, selection, movement transformations, and full-column isolated Parquet writes; excludes validation and JDBC append.",
+  "persistence_policy": "No driver or movement transformation persistence; fresh process per configuration.",
+  "output_schemas": {
+    "play_features": {
+      "type": "struct",
+      "fields": [
+        {
+          "name": "play_key",
+          "type": "string",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "player_key",
+          "type": "integer",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "game_id",
+          "type": "string",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "field_type",
+          "type": "string",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "roster_position",
+          "type": "string",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "duration_s",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "distance_yd",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "max_speed",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "avg_speed",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "max_accel",
+          "type": "double",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "sharp_cuts",
+          "type": "integer",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "is_injury",
+          "type": "boolean",
+          "nullable": false,
+          "metadata": {}
+        }
+      ]
+    },
+    "movement_summary": {
+      "type": "struct",
+      "fields": [
+        {
+          "name": "field_type",
+          "type": "string",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "roster_position",
+          "type": "string",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "plays",
+          "type": "integer",
+          "nullable": false,
+          "metadata": {}
+        },
+        {
+          "name": "avg_max_speed",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "avg_max_accel",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        },
+        {
+          "name": "avg_sharp_cuts",
+          "type": "double",
+          "nullable": true,
+          "metadata": {}
+        }
+      ]
+    }
+  },
+  "seconds": 193.5946109919969,
+  "rows_processed": 57336744,
+  "selected_plays": 200541,
+  "subset_fingerprint": "-5416738319511946107416",
+  "output_rows": {
+    "play_features": 191761,
+    "movement_summary": 20
+  },
+  "retained_output_plays": 191761,
+  "excluded_plays": 8780,
+  "exclusion_definition": "Selected PlayKeys absent after Joshua's boundary and metadata rules.",
+  "validated_at": "2026-11-16T05:06:05.008432+00:00",
+  "finished_at": "2026-11-16T05:06:06.488668+00:00"
+}
