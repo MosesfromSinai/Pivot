@@ -4,10 +4,10 @@ CS 179G, UC Riverside, Fall 2026. We use Apache Spark to test whether NFL player
 
 ## Team
 
-- TODO
-- TODO
-- TODO
-- TODO
+- Moses Avila
+- Colin Pham
+- Joshua Mena
+- Adolfo Magallanes
 
 ## Data Sources
 
@@ -30,3 +30,22 @@ part3_web/          # web interface for results
 conda activate cs179
 pip install kaggle nflreadpy polars pyarrow
 ```
+
+## Part 2: Spark → MySQL
+
+- MySQL runs on the server at 127.0.0.1:3307, database `pivot`, user `root`, no password. If it's down, start it with `~/start_mysql.sh`.
+- Create the tables:
+
+  ```bash
+  mysql -u root -h 127.0.0.1 -P 3307 < part2_spark/schema.sql
+  ```
+
+- Run the jobs:
+
+  ```bash
+  spark-submit --packages com.mysql:mysql-connector-j:8.4.0 part2_spark/01_injury_rates.py
+  spark-submit --packages com.mysql:mysql-connector-j:8.4.0 part2_spark/02_movement_features.py
+  spark-submit --packages com.mysql:mysql-connector-j:8.4.0 part2_spark/03_league_injury_rates.py
+  ```
+
+- The 1 vs 2 worker timing runs and graph are documented in [part2_spark/TIMING.md](part2_spark/TIMING.md).
