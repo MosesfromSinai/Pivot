@@ -70,3 +70,38 @@ def load_tabs():
         items.sort(key=lambda g: (g["value"] == "unknown", g["value"]))
         tabs.append({"key": key, "label": label, "groups": items})
     return tabs
+
+
+def tab_groups(tabs, key):
+    return next((t["groups"] for t in tabs if t["key"] == key), [])
+
+
+def position_gap(tabs):
+    # H3: pool skill positions and linemen so each side has more injuries
+    out = {}
+    for name, members in (("skill", SKILL), ("linemen", LINEMEN)):
+        chosen = [g for g in tab_groups(tabs, "roster_position") if g["value"] in members]
+        if not chosen:
+            continue
+        side = {}
+        for s in ("syn", "nat"):
+            injuries = sum(g[s]["injuries"] for g in chosen)
+            side[s] = {"injuries": injuries, "rate": rate(injuries, sum(g[s]["plays"] for g in chosen))}
+        side["ratio"] = ratio(side["syn"]["rate"], side["nat"]["rate"])
+        side["few"] = min(side["syn"]["injuries"], side["nat"]["injuries"]) < MIN_INJURIES
+        out[name] = side
+    return out
+
+
+def ankle_foot_share(tabs):
+    # H4: how much of the turf-minus-grass gap comes from ankle/foot injuries
+    extra = {
+        g["value"]: g["syn"]["rate"] - g["nat"]["rate"]
+        for g in tab_groups(tabs, "body_part")
+        if g["syn"]["rate"] is not None and g["nat"]["rate"] is not None
+    }
+    total = sum(extra.values())
+    if total <= 0:
+        return None
+    part = sum(v for k, v in extra.items() if k in ANKLE_FOOT)
+    return {"total": total, "ankle_foot": part, "share": part / total}
