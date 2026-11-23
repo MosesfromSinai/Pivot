@@ -107,5 +107,31 @@
       {% endif %}
     </section>
   </div>
+
+  <section class="dash-cell">
+    <div class="cell-head">
+      <h2>Injury rate by season <span class="unit">· injuries / team-game</span></h2>
+      <div class="legend"><span><i class="ln syn"></i>Synthetic</span><span><i class="ln nat"></i>Natural</span><span class="src"><i class="sq"></i>Src · league reports</span></div>
+    </div>
+    {% if league %}
+    <div class="chart-box"><canvas id="leagueChart"></canvas></div>
+    <p class="caption"><span class="tag">H1</span> Same question league-wide with nflverse injury reports: turf averages {{ f(league.syn_avg, "%.2f") }} injuries per team-game vs {{ f(league.nat_avg, "%.2f") }} on grass across {{ league.seasons[0] }}–{{ league.seasons[-1] }}.</p>
+    {% elif not error %}
+    <p class="empty">No league_injury_rates rows yet. Run part2_spark/03_league_injury_rates.py first.</p>
+    {% endif %}
+  </section>
+
+  <footer class="notes">
+    <div class="notes-label">Notes</div>
+    <ol>
+      {% if overall %}
+      <li><b>Small sample: {{ total }} injuries</b> ({{ overall.syn.injuries }} synthetic, {{ overall.nat.injuries }} natural). <span id="ciNote"></span>
+        {% if overall.ratio and overall.ratio > 1 %}Turf comes out {{ f(overall.ratio, "%.2f") }}× grass per play, so H1 holds on the raw numbers.{% else %}Turf isn't higher than grass, so H1 doesn't hold here.{% endif %}</li>
+      {% endif %}
+      <li>Groups with fewer than {{ min_injuries }} injuries per surface are shown but shouldn't be compared.</li>
+      <li>Rate = injuries ÷ plays × 1,000. Body part and severity use all plays on that surface as the denominator.</li>
+      <li>League rate = injury report listings ÷ team-games, so it's a rougher check. Games with an unknown surface are left out.</li>
+    </ol>
+  </footer>
 </div>
 {% endblock %}
