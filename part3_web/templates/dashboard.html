@@ -112,3 +112,64 @@
   </section>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+const TABS = {{ tabs|tojson }};
+const LEAGUE = {{ league|tojson }};
+const MIN = {{ min_injuries }};
+const css = getComputedStyle(document.documentElement);
+const c = name => css.getPropertyValue(name).trim();
+const fade = (hex, few) => few ? hex + "40" : hex;
+Chart.defaults.color = c("--muted");
+Chart.defaults.borderColor = c("--border");
+Chart.defaults.font.family = "Inter";
+
+const groupCanvas = document.getElementById("groupChart");
+let groupChart = null;
+
+function showTab(i) {
+  const groups = TABS[i].groups;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", +b.dataset.tab === i));
+  document.querySelectorAll(".tab-caption").forEach(p => p.hidden = +p.dataset.tab !== i);
+  document.getElementById("groupEmpty").hidden = groups.length > 0;
+  groupCanvas.parentElement.hidden = groups.length === 0;
+  const few = groups.filter(g => g.few).map(g => g.value);
+  const note = document.getElementById("fewNote");
+  note.hidden = few.length === 0;
+  note.textContent = `Too few to compare (under ${MIN} injuries on a surface), so they're faded: ${few.join(", ")}.`;
+  const bars = (side, color) => ({
+    label: side === "syn" ? "Synthetic" : "Natural",
+    data: groups.map(g => g[side].rate),
+    backgroundColor: groups.map(g => fade(c(color), g.few)),
+    side,
+  });
+  const data = {
+    labels: groups.map(g => [g.value, `n = ${g.syn.injuries} / ${g.nat.injuries}`]),
+    datasets: [bars("syn", "--synthetic-light"), bars("nat", "--natural")],
+  };
+  if (groupChart) { groupChart.data = data; groupChart.update(); return; }
+  groupChart = new Chart(groupCanvas, {
+    type: "bar", data,
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
+        const g = TABS[currentTab].groups[ctx.dataIndex][ctx.dataset.side];
+        const r = g.rate === null ? "—" : g.rate.toFixed(3);
+        return `${ctx.dataset.label}: ${r} per 1k (${g.injuries} inj / ${g.plays.toLocaleString()} plays)`;
+      } } } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: "injuries per 1,000 plays" } } },
+    },
+  });
+}
+
+let currentTab = 0;
+if (groupCanvas && TABS.length) {
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
+    currentTab = +b.dataset.tab;
+    showTab(currentTab);
+  }));
+  showTab(0);
+}
+</script>
+{% endblock %}
