@@ -246,5 +246,61 @@ if (groupCanvas && TABS.length) {
   document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(+b.dataset.tab)));
   showTab(0);
 }
+
+const leagueCanvas = document.getElementById("leagueChart");
+if (leagueCanvas && LEAGUE) {
+  // Dashed guide at the hovered season, plus each line's last value at its end
+  const lineExtras = {
+    id: "lineExtras",
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea: area } = chart;
+      const active = chart.tooltip.getActiveElements();
+      ctx.save();
+      if (active.length) {
+        ctx.strokeStyle = c("--muted");
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(active[0].element.x, area.top); ctx.lineTo(active[0].element.x, area.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.font = `12px ${MONO}`;
+      ctx.textBaseline = "middle";
+      chart.data.datasets.forEach((ds, d) => {
+        const i = ds.data.length - 1, pt = chart.getDatasetMeta(d).data[i];
+        if (ds.data[i] === null || !pt) return;
+        ctx.fillStyle = ds.borderColor;
+        ctx.fillText(`${ds.short} ${ds.data[i].toFixed(2)}`, pt.x + 10, pt.y);
+      });
+      ctx.restore();
+    },
+  };
+  const line = (label, short, values, color, pointStyle) => ({
+    label, short, data: values, borderColor: c(color), backgroundColor: c("--panel"), pointStyle,
+    pointRadius: 4, pointHoverRadius: 5, pointBorderWidth: 1.5, borderWidth: 2, spanGaps: true,
+  });
+  new Chart(leagueCanvas, {
+    type: "line", plugins: [lineExtras],
+    data: {
+      labels: LEAGUE.seasons,
+      datasets: [line("Synthetic", "SYN", LEAGUE.syn, "--synthetic-light", "circle"), line("Natural", "NAT", LEAGUE.nat, "--natural", "rect")],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { right: 72 } },
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false }, tooltip: { ...tooltipStyle, callbacks: {
+        label: ctx => `${ctx.dataset.short}  ${ctx.parsed.y === null ? "—" : ctx.parsed.y.toFixed(2)}`,
+        footer: items => {
+          if (items.length < 2 || items.some(i => i.parsed.y === null)) return "";
+          const gap = items[0].parsed.y - items[1].parsed.y;
+          return `GAP  ${gap >= 0 ? "+" : ""}${gap.toFixed(2)}`;
+        },
+      } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
+        y: { grace: "10%", border: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
+      },
+    },
+  });
+}
 </script>
 {% endblock %}
