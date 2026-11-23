@@ -49,3 +49,21 @@ pip install kaggle nflreadpy polars pyarrow
   ```
 
 - The 1 vs 2 worker timing runs and graph are documented in [part2_spark/TIMING.md](part2_spark/TIMING.md).
+
+## Part 3: Web App
+
+- Install once: `pip install -r part3_web/requirements.txt` (inside `conda activate cs179`).
+- Start it on the server (MySQL has to be running):
+
+  ```bash
+  PORT=5000 python part3_web/app.py
+  ```
+
+- `PORT` picks the port (default 5000). If someone else is already using 5000, pick another one like 5001.
+- The app only listens on 127.0.0.1, so view it from your laptop with port forwarding, then open http://localhost:5000:
+
+  ```bash
+  ssh -L 5000:localhost:5000 cs179g
+  ```
+
+- To add a page, drop a module in `part3_web/pages/` with a Blueprint named `bp` and a view called `index`. Set `NAV_TITLE` to show it in the nav. No need to touch `app.py`.
