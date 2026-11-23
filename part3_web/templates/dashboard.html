@@ -244,7 +244,8 @@ function showTab(i) {
 
 if (groupCanvas && TABS.length) {
   document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(+b.dataset.tab)));
-  showTab(0);
+  // Wait for the web fonts so Chart.js measures axis labels with the right widths
+  document.fonts.ready.then(() => showTab(0));
 }
 
 const leagueCanvas = document.getElementById("leagueChart");
@@ -264,12 +265,18 @@ if (leagueCanvas && LEAGUE) {
       }
       ctx.font = `12px ${MONO}`;
       ctx.textBaseline = "middle";
-      chart.data.datasets.forEach((ds, d) => {
+      const labels = chart.data.datasets.map((ds, d) => {
         const i = ds.data.length - 1, pt = chart.getDatasetMeta(d).data[i];
-        if (ds.data[i] === null || !pt) return;
-        ctx.fillStyle = ds.borderColor;
-        ctx.fillText(`${ds.short} ${ds.data[i].toFixed(2)}`, pt.x + 10, pt.y);
-      });
+        return ds.data[i] === null || !pt ? null : { ds, text: `${ds.short} ${ds.data[i].toFixed(2)}`, x: pt.x + 10, y: pt.y };
+      }).filter(Boolean);
+      // Keep the two end labels at least 14px apart when the lines finish close together
+      if (labels.length === 2 && Math.abs(labels[0].y - labels[1].y) < 14) {
+        const [hi, lo] = labels[0].y <= labels[1].y ? labels : [labels[1], labels[0]];
+        const mid = (hi.y + lo.y) / 2;
+        hi.y = mid - 7;
+        lo.y = mid + 7;
+      }
+      labels.forEach(l => { ctx.fillStyle = l.ds.borderColor; ctx.fillText(l.text, l.x, l.y); });
       ctx.restore();
     },
   };
@@ -277,7 +284,7 @@ if (leagueCanvas && LEAGUE) {
     label, short, data: values, borderColor: c(color), backgroundColor: c("--panel"), pointStyle,
     pointRadius: 4, pointHoverRadius: 5, pointBorderWidth: 1.5, borderWidth: 2, spanGaps: true,
   });
-  new Chart(leagueCanvas, {
+  document.fonts.ready.then(() => new Chart(leagueCanvas, {
     type: "line", plugins: [lineExtras],
     data: {
       labels: LEAGUE.seasons,
@@ -300,7 +307,7 @@ if (leagueCanvas && LEAGUE) {
         y: { grace: "10%", border: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
       },
     },
-  });
+  }));
 }
 </script>
 {% endblock %}
