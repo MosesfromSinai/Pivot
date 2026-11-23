@@ -41,3 +41,32 @@ def load_overall():
     sides["ratio"] = ratio(sides["syn"]["rate"], sides["nat"]["rate"])
     sides["plays"] = sides["syn"]["plays"] + sides["nat"]["plays"]
     return sides
+
+
+def load_tabs():
+    keys = [key for key, _ in TABS]
+    placeholders = ", ".join(["%s"] * len(keys))
+    rows = query(
+        "SELECT group_type, group_value, field_type, plays, injuries"
+        f" FROM injury_rates WHERE group_type IN ({placeholders})",
+        keys,
+    )
+    groups = {key: {} for key in keys}
+    for r in rows:
+        if r["field_type"] in SIDES:
+            g = groups[r["group_type"]].setdefault(r["group_value"], {"value": r["group_value"]})
+            g[SIDES[r["field_type"]]] = {
+                "injuries": r["injuries"],
+                "plays": r["plays"],
+                "rate": rate(r["injuries"], r["plays"]),
+            }
+    tabs = []
+    for key, label in TABS:
+        # A group needs both surfaces to be compared at all
+        items = [g for g in groups[key].values() if "syn" in g and "nat" in g]
+        for g in items:
+            g["ratio"] = ratio(g["syn"]["rate"], g["nat"]["rate"])
+            g["few"] = min(g["syn"]["injuries"], g["nat"]["injuries"]) < MIN_INJURIES
+        items.sort(key=lambda g: (g["value"] == "unknown", g["value"]))
+        tabs.append({"key": key, "label": label, "groups": items})
+    return tabs
