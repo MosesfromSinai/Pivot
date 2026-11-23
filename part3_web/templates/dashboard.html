@@ -171,5 +171,27 @@ if (groupCanvas && TABS.length) {
   }));
   showTab(0);
 }
+
+const leagueCanvas = document.getElementById("leagueChart");
+if (leagueCanvas && LEAGUE) {
+  const line = (label, values, color) => ({
+    label, data: values, borderColor: c(color), backgroundColor: c(color),
+    tension: 0.25, pointRadius: 3, spanGaps: true,
+  });
+  new Chart(leagueCanvas, {
+    type: "line",
+    data: {
+      labels: LEAGUE.seasons,
+      datasets: [line("Synthetic", LEAGUE.syn, "--synthetic-light"), line("Natural", LEAGUE.nat, "--natural")],
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { tooltip: { callbacks: { label: ctx =>
+        `${ctx.dataset.label}: ${ctx.parsed.y === null ? "—" : ctx.parsed.y.toFixed(2)} per game` } } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: "injuries per team-game" } } },
+    },
+  });
+}
 </script>
 {% endblock %}
