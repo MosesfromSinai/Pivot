@@ -33,3 +33,22 @@ a { color: var(--synthetic-light); }
   color: var(--muted); text-decoration: none; padding: 17px 12px; border-bottom: 2px solid transparent; white-space: nowrap; }
 .nav-links a:hover { color: var(--text); }
 .nav-links a.active { color: var(--text); border-bottom-color: var(--synthetic-light); }
+
+/* Panels and stat cards */
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+.panel-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.stat-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px; }
+.stat-card { background: var(--panel); border: 1px solid var(--border); border-top: 3px solid var(--border);
+  border-radius: 6px; padding: 16px 18px; }
+.stat-card.synthetic { border-top-color: var(--synthetic-light); }
+.stat-card.natural { border-top-color: var(--natural); }
+.stat-card.injury { border-top-color: var(--injury); }
+.stat-label { font: 600 13px var(--heading); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.stat-value { font: 600 34px/1.2 var(--mono); margin: 4px 0; }
+.stat-sub { font: 12px var(--mono); color: var(--muted); }
+.chart-box { position: relative; height: 320px; }
+.legend { display: flex; gap: 16px; font-size: 13px; color: var(--muted); }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+.swatch.synthetic { background: var(--synthetic-light); }
+.swatch.natural { background: var(--natural); }
