@@ -1,115 +1,138 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% macro f(v, fmt="%.3f") %}{{ fmt|format(v) if v is not none else "—" }}{% endmacro %}
+{% macro n(v) %}{{ "{:,}".format(v|int) if v is not none else "—" }}{% endmacro %}
 
 {% block content %}
-<div class="panel-header">
-  <h1>Turf vs. Grass</h1>
-  <span class="muted">Kaggle NFL 1st and Future + nflverse injury reports</span>
-</div>
+<div class="dash">
+  <header class="dash-head">
+    <div>
+      <div class="crumb">Dashboard / Lower-body injuries</div>
+      <h1 class="dash-title">Turf vs. Grass</h1>
+    </div>
+    <div class="meta">
+      <div><div class="meta-label">Tracking sample</div><div class="meta-value">{{ n(overall.plays) ~ " plays" if overall else "—" }}</div></div>
+      <div><div class="meta-label">League reports</div><div class="meta-value">{{ "All teams · %s–%s"|format(league.seasons[0], league.seasons[-1]) if league else "—" }}</div></div>
+      <div><div class="meta-label">Injuries</div><div class="meta-value">{% if overall %}<span class="red">{{ overall.syn.injuries + overall.nat.injuries }}</span> lower-body{% else %}—{% endif %}</div></div>
+    </div>
+  </header>
 
-{% if overall %}
-<div class="stat-grid">
-  <div class="stat-card synthetic">
-    <div class="stat-label">Synthetic · injuries per 1k plays</div>
-    <div class="stat-value">{{ f(overall.syn.rate) }}</div>
-    <div class="stat-sub">{{ overall.syn.injuries }} injuries / {{ "{:,}".format(overall.syn.plays) }} plays</div>
-  </div>
-  <div class="stat-card natural">
-    <div class="stat-label">Natural · injuries per 1k plays</div>
-    <div class="stat-value">{{ f(overall.nat.rate) }}</div>
-    <div class="stat-sub">{{ overall.nat.injuries }} injuries / {{ "{:,}".format(overall.nat.plays) }} plays</div>
-  </div>
-  <div class="stat-card injury">
-    <div class="stat-label">Turf vs. grass ratio</div>
-    <div class="stat-value">{{ f(overall.ratio, "%.2f") }}×</div>
-    <div class="stat-sub">synthetic rate ÷ natural rate</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-label">Total plays</div>
-    <div class="stat-value">{{ "{:,}".format(overall.plays) }}</div>
-    <div class="stat-sub">{{ overall.syn.injuries + overall.nat.injuries }} injuries total</div>
-  </div>
-</div>
-<p class="caption"><span class="tag">H1</span>
-  {% if overall.ratio and overall.ratio > 1 %}Turf comes out {{ f(overall.ratio, "%.2f") }}× grass per play, so H1 holds on the raw numbers. It's only {{ overall.syn.injuries + overall.nat.injuries }} injuries though, so the splits below get thin fast.
-  {% else %}Turf isn't higher than grass here, so H1 doesn't hold on these numbers.{% endif %}
-</p>
-{% elif not error %}
-<div class="panel empty">No overall rows in injury_rates yet. Run part2_spark/01_injury_rates.py first.</div>
-{% endif %}
-
-<section class="panel">
-  <div class="panel-header">
-    <h2>Injuries per 1,000 plays by group</h2>
-    <div class="legend"><span><i class="swatch synthetic"></i>Synthetic</span><span><i class="swatch natural"></i>Natural</span></div>
-  </div>
-  {% if tabs|selectattr("groups")|list %}
-  <div class="tabs">
-    {% for t in tabs %}<button class="tab{{ ' active' if loop.first }}" data-tab="{{ loop.index0 }}">{{ t.label }}</button>{% endfor %}
-  </div>
-  {% for t in tabs %}
-  <p class="caption tab-caption" data-tab="{{ loop.index0 }}" {{ 'hidden' if not loop.first }}>
-    {% if t.key == "body_part" %}<span class="tag">H4</span>
-      {% if ankle %}We figured the extra turf injuries would mostly be ankle/foot. Ankle, foot, toes and heel make up {{ (ankle.share * 100)|round|int }}% of the turf-minus-grass gap ({{ f(ankle.ankle_foot) }} of {{ f(ankle.total) }} per 1k plays).
-      {% else %}Turf isn't higher than grass across body parts, so there's no extra to split up.{% endif %}
-    {% elif t.key == "roster_position" %}<span class="tag">H3</span>
-      {% if gap.skill and gap.linemen %}We expected a bigger turf gap for skill positions (WR, RB, TE, CB, S) than linemen. Pooled together, skill guys are {{ f(gap.skill.ratio, "%.2f") }}× on turf ({{ gap.skill.syn.injuries }} vs {{ gap.skill.nat.injuries }} injuries) and linemen are {{ f(gap.linemen.ratio, "%.2f") }}× ({{ gap.linemen.syn.injuries }} vs {{ gap.linemen.nat.injuries }}).{% if gap.linemen.few or gap.skill.few %} One side has under {{ min_injuries }} injuries, so take that comparison with a grain of salt.{% endif %}
-      {% else %}Not enough position data to compare skill players and linemen.{% endif %}
-    {% elif t.key == "severity" %}<span class="tag">H1</span> Same comparison split by how long players were out:
-      {% for g in t.groups %}{{ g.value }} is {{ f(g.ratio, "%.2f") }}×{{ ", " if not loop.last else "." }}{% endfor %}
-    {% else %}<span class="tag">H1</span> Compare the two bars inside each group: if turf is still higher with {{ t.label|lower }} held fixed, it's not just {{ t.label|lower }} doing it.
-    {% endif %}
-  </p>
-  {% endfor %}
-  <div class="chart-box"><canvas id="groupChart"></canvas></div>
-  <p class="empty" id="groupEmpty" hidden>No rows for this group yet.</p>
-  <p class="note note-warn" id="fewNote" hidden></p>
-  <p class="note">n under each group = turf / grass injuries. Body part and severity use all plays on that surface as the denominator.</p>
-  {% elif not error %}
-  <p class="empty">No group rows in injury_rates yet.</p>
-  {% endif %}
-</section>
-
-<div class="grid">
-  <section class="panel">
-    <h2>Movement profile: turf vs. grass</h2>
-    {% if movement %}
-    {% set s, n = movement.syn, movement.nat %}
-    <p class="caption"><span class="tag">H2</span>
-      {% if s.max_speed > n.max_speed and s.sharp_cuts > n.sharp_cuts %}Turf plays are faster and have more sharp cuts, which fits H2.
-      {% elif s.max_speed > n.max_speed %}Turf plays are a bit faster, but they don't have more sharp cuts, so H2 only half holds.
-      {% elif s.sharp_cuts > n.sharp_cuts %}Turf plays have more sharp cuts but aren't faster, so H2 only half holds.
-      {% else %}Turf plays aren't faster or cuttier than grass, so H2 doesn't hold here.{% endif %}
-    </p>
-    <table class="table">
-      <tr><th>Per play (weighted by plays)</th><th class="num">Synthetic</th><th class="num">Natural</th><th class="num">Diff</th></tr>
-      {% for label, key, fmt in [("Avg max speed (yd/s)", "max_speed", "%.2f"), ("Avg sharp cuts", "sharp_cuts", "%.3f")] %}
-      <tr>
-        <td>{{ label }}</td>
-        <td class="num">{{ f(s[key], fmt) }}</td>
-        <td class="num">{{ f(n[key], fmt) }}</td>
-        <td class="num">{{ "%+.1f%%"|format((s[key] - n[key]) / n[key] * 100) if s[key] is not none and n[key] else "—" }}</td>
-      </tr>
-      {% endfor %}
-      <tr class="dim"><td>Plays</td><td class="num">{{ "{:,}".format(s.plays|int) }}</td><td class="num">{{ "{:,}".format(n.plays|int) }}</td><td></td></tr>
-    </table>
-    <p class="note">This compares all turf plays to all grass plays. It doesn't compare injury plays to normal plays.</p>
-    {% elif not error %}
-    <p class="empty">No movement_summary rows yet. Run part2_spark/02_movement_features.py first.</p>
-    {% endif %}
+  {% if overall %}
+  {% set total = overall.syn.injuries + overall.nat.injuries %}
+  <section class="stat-strip">
+    {% for side, label in [("syn", "Synthetic"), ("nat", "Natural")] %}
+    <div class="stat">
+      <div class="stat-label"><i class="sq {{ side }}"></i>{{ label }} · inj / 1k plays</div>
+      <div class="stat-big">{{ f(overall[side].rate, "%.2f") }}</div>
+      <div class="stat-sub"><span class="red">{{ overall[side].injuries }}</span> inj · {{ n(overall[side].plays) }} plays</div>
+    </div>
+    {% endfor %}
+    <div class="stat">
+      <div class="stat-label">Turf vs. grass · rate diff</div>
+      <div class="stat-big">{{ "%+.0f"|format((overall.ratio - 1) * 100) if overall.ratio else "—" }}<span class="unit">%</span></div>
+      <div class="ci" id="ci" data-syn="{{ overall.syn.injuries }}" data-nat="{{ overall.nat.injuries }}" data-rr="{{ overall.ratio }}">
+        <span class="ci-one"></span><span class="ci-range"></span><span class="ci-dot"></span>
+      </div>
+      <div class="stat-sub" id="ciText">RR {{ f(overall.ratio, "%.2f") }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Plays analyzed</div>
+      <div class="stat-big">{{ n(overall.plays) }}</div>
+      <div class="stat-sub">Kaggle tracking · <span class="red">{{ total }}</span> inj</div>
+    </div>
   </section>
+  {% elif not error %}
+  <p class="empty">No overall rows in injury_rates yet. Run part2_spark/01_injury_rates.py first.</p>
+  {% endif %}
 
-  <section class="panel">
-    <h2>League injuries per game by season</h2>
+  <div class="dash-row">
+    <section class="dash-cell">
+      <div class="cell-head"><h2>Injury rate by surface <span class="unit">· inj / 1k plays</span></h2></div>
+      {% if tabs|selectattr("groups")|list %}
+      <div class="toolbar">
+        <div class="seg">{% for t in tabs %}<button class="tab{{ ' active' if loop.first }}" data-tab="{{ loop.index0 }}">{{ t.label }}</button>{% endfor %}</div>
+        <span class="src"><i class="sq syn"></i>Src · Kaggle plays</span>
+      </div>
+      <div class="legend"><span><i class="sq syn"></i>Synthetic</span><span><i class="sq nat"></i>Natural</span></div>
+      <div class="chart-box tall"><canvas id="groupChart"></canvas></div>
+      <p class="empty" id="groupEmpty" hidden>No rows for this group yet.</p>
+      {% for t in tabs %}
+      <p class="caption tab-caption" data-tab="{{ loop.index0 }}" {{ 'hidden' if not loop.first }}>
+        {% if t.key == "body_part" %}<span class="tag">H4</span>
+          {% if ankle %}We figured the extra turf injuries would mostly be ankle/foot. Ankle, foot, toes and heel make up {{ (ankle.share * 100)|round|int }}% of the turf-minus-grass gap ({{ f(ankle.ankle_foot) }} of {{ f(ankle.total) }} per 1k plays).
+          {% else %}Turf isn't higher than grass across body parts, so there's no extra to split up.{% endif %}
+        {% elif t.key == "roster_position" %}<span class="tag">H3</span>
+          {% if gap.skill and gap.linemen %}We expected a bigger turf gap for skill positions (WR, RB, TE, CB, S) than linemen. Pooled, skill guys are {{ f(gap.skill.ratio, "%.2f") }}× on turf ({{ gap.skill.syn.injuries }} vs {{ gap.skill.nat.injuries }} injuries) and linemen are {{ f(gap.linemen.ratio, "%.2f") }}× ({{ gap.linemen.syn.injuries }} vs {{ gap.linemen.nat.injuries }}).{% if gap.linemen.few or gap.skill.few %} One side has under {{ min_injuries }} injuries, so take that with a grain of salt.{% endif %}
+          {% else %}Not enough position data to compare skill players and linemen.{% endif %}
+        {% elif t.key == "severity" %}<span class="tag">H1</span> Same comparison split by how long players were out:
+          {% for g in t.groups %}{{ g.value }} is {{ f(g.ratio, "%.2f") }}×{{ ", " if not loop.last else "." }}{% endfor %}
+        {% else %}<span class="tag">H1</span> Compare the two bars inside each group: if turf is still higher with {{ t.label|lower }} held fixed, it's not just {{ t.label|lower }} doing it.
+        {% endif %}
+      </p>
+      {% endfor %}
+      {% elif not error %}
+      <p class="empty">No group rows in injury_rates yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="dash-cell">
+      <div class="cell-head"><h2>Movement profile</h2><span class="src"><i class="sq syn"></i>Src · tracking</span></div>
+      {% if movement %}
+      {% set s, nat = movement.syn, movement.nat %}
+      <div class="legend"><span><i class="sq syn"></i>Synthetic · {{ n(s.plays) }}</span><span><i class="sq nat"></i>Natural · {{ n(nat.plays) }}</span></div>
+      {% for label, key, fmt in [("Top speed · yd/s", "max_speed", "%.2f"), ("Sharp cuts / play", "sharp_cuts", "%.3f")] %}
+      {% set top = [s[key] or 0, nat[key] or 0]|max %}
+      <div class="metric">
+        <div class="metric-head">
+          <span>{{ label }}</span>
+          <span class="delta">Δ {{ "%+.1f%%"|format((s[key] - nat[key]) / nat[key] * 100) if s[key] is not none and nat[key] else "—" }}</span>
+        </div>
+        {% for side, row in [("syn", s), ("nat", nat)] %}
+        <div class="hbar-row">
+          <div class="hbar-track"><div class="hbar-fill {{ side }}" style="width: {{ (row[key] / (top * 1.25) * 100)|round(1) if row[key] and top else 0 }}%"></div></div>
+          <span class="hbar-val{{ ' dim' if side == 'nat' }}">{{ f(row[key], fmt) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <p class="foot"><span class="tag">H2</span>
+        {% if s.max_speed > nat.max_speed and s.sharp_cuts > nat.sharp_cuts %}Turf plays are faster and have more sharp cuts, which fits H2.
+        {% elif s.max_speed > nat.max_speed %}Turf plays are a bit faster, but they don't have more sharp cuts, so H2 only half holds.
+        {% elif s.sharp_cuts > nat.sharp_cuts %}Turf plays have more sharp cuts but aren't faster, so H2 only half holds.
+        {% else %}Turf plays aren't faster or cuttier than grass, so H2 doesn't hold here.{% endif %}
+      </p>
+      <p class="foot">Averages are weighted by plays across positions. This compares turf plays to grass plays, not injury plays to normal plays.</p>
+      {% elif not error %}
+      <p class="empty">No movement_summary rows yet. Run part2_spark/02_movement_features.py first.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="dash-cell">
+    <div class="cell-head">
+      <h2>Injury rate by season <span class="unit">· injuries / team-game</span></h2>
+      <div class="legend"><span><i class="ln syn"></i>Synthetic</span><span><i class="ln nat"></i>Natural</span><span class="src"><i class="sq"></i>Src · league reports</span></div>
+    </div>
     {% if league %}
-    <p class="caption"><span class="tag">H1</span> Same question league-wide with nflverse injury reports ({{ league.seasons[0] }}–{{ league.seasons[-1] }}): turf averages {{ f(league.syn_avg, "%.2f") }} injuries per team-game vs {{ f(league.nat_avg, "%.2f") }} on grass.</p>
     <div class="chart-box"><canvas id="leagueChart"></canvas></div>
-    <p class="note">Counts come from weekly injury report listings, so this is a rougher check than the Kaggle plays. Games with an unknown surface are left out.</p>
+    <p class="caption"><span class="tag">H1</span> Same question league-wide with nflverse injury reports: turf averages {{ f(league.syn_avg, "%.2f") }} injuries per team-game vs {{ f(league.nat_avg, "%.2f") }} on grass across {{ league.seasons[0] }}–{{ league.seasons[-1] }}.</p>
     {% elif not error %}
     <p class="empty">No league_injury_rates rows yet. Run part2_spark/03_league_injury_rates.py first.</p>
     {% endif %}
   </section>
+
+  <footer class="notes">
+    <div class="notes-label">Notes</div>
+    <ol>
+      {% if overall %}
+      <li><b>Small sample: {{ total }} injuries</b> ({{ overall.syn.injuries }} synthetic, {{ overall.nat.injuries }} natural). <span id="ciNote"></span>
+        {% if overall.ratio and overall.ratio > 1 %}Turf comes out {{ f(overall.ratio, "%.2f") }}× grass per play, so H1 holds on the raw numbers.{% else %}Turf isn't higher than grass, so H1 doesn't hold here.{% endif %}</li>
+      {% endif %}
+      <li>Groups with fewer than {{ min_injuries }} injuries per surface are shown but shouldn't be compared.</li>
+      <li>Rate = injuries ÷ plays × 1,000. Body part and severity use all plays on that surface as the denominator.</li>
+      <li>League rate = injury report listings ÷ team-games, so it's a rougher check. Games with an unknown surface are left out.</li>
+    </ol>
+  </footer>
 </div>
 {% endblock %}
 
@@ -118,80 +141,173 @@
 const TABS = {{ tabs|tojson }};
 const LEAGUE = {{ league|tojson }};
 const MIN = {{ min_injuries }};
+const MONO = "JetBrains Mono";
 const css = getComputedStyle(document.documentElement);
 const c = name => css.getPropertyValue(name).trim();
-const fade = (hex, few) => few ? hex + "40" : hex;
 Chart.defaults.color = c("--muted");
 Chart.defaults.borderColor = c("--border");
 Chart.defaults.font.family = "Inter";
+const tooltipStyle = {
+  backgroundColor: "#0B0B0C", borderColor: c("--border"), borderWidth: 1, cornerRadius: 0, padding: 10,
+  titleFont: { family: "Barlow Condensed", size: 15, weight: "600" }, bodyFont: { family: MONO, size: 12 },
+  footerFont: { family: "Inter", size: 11, weight: "400" }, footerColor: c("--muted"), boxWidth: 8, boxHeight: 8,
+};
+
+// 95% CI for the turf/grass rate ratio (log method on the injury counts)
+const ci = document.getElementById("ci");
+if (ci) {
+  const a = +ci.dataset.syn, b = +ci.dataset.nat, rr = +ci.dataset.rr;
+  if (a > 0 && b > 0 && rr > 0) {
+    const se = Math.sqrt(1 / a + 1 / b);
+    const lo = rr * Math.exp(-1.96 * se), hi = rr * Math.exp(1.96 * se);
+    const pos = v => `${(v / Math.max(2, hi * 1.15)) * 100}%`;
+    ci.querySelector(".ci-range").style.cssText = `left: ${pos(lo)}; width: calc(${pos(hi)} - ${pos(lo)})`;
+    ci.querySelector(".ci-dot").style.left = pos(rr);
+    ci.querySelector(".ci-one").style.left = pos(1);
+    document.getElementById("ciText").textContent = `RR ${rr.toFixed(2)} · 95% CI ${lo.toFixed(2)}–${hi.toFixed(2)}`;
+    document.getElementById("ciNote").textContent = lo > 1
+      ? "The 95% CI stays above 1, so the gap probably isn't just noise."
+      : "The 95% CI includes 1, so we can't rule out no difference.";
+  }
+}
 
 const groupCanvas = document.getElementById("groupChart");
-let groupChart = null;
+let currentTab = 0, groupChart = null;
+const cur = () => TABS[currentTab].groups;
+
+// Shade low-N groups, print each bar's value on top and the N under each group
+const barExtras = {
+  id: "barExtras",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea: area, scales: { x } } = chart;
+    const width = x.width / Math.max(cur().length, 1);
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.035)";
+    cur().forEach((g, i) => g.few && ctx.fillRect(x.getPixelForValue(i) - width / 2, area.top, width, area.bottom - area.top));
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea: area, scales: { x } } = chart;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.font = `11px ${MONO}`;
+    chart.data.datasets.forEach((ds, d) => chart.getDatasetMeta(d).data.forEach((bar, i) => {
+      if (ds.data[i] === null) return;
+      ctx.fillStyle = d === 0 ? c("--synthetic-light") : c("--muted");
+      ctx.fillText(ds.data[i].toFixed(2), bar.x, bar.y - 6);
+    }));
+    cur().forEach((g, i) => {
+      ctx.fillStyle = g.few ? c("--muted") : c("--injury");
+      ctx.fillText(`N=${g.syn.injuries}/${g.nat.injuries}${g.few ? " · LOW N" : ""}`, x.getPixelForValue(i), area.bottom + 40);
+    });
+    ctx.restore();
+  },
+};
 
 function showTab(i) {
-  const groups = TABS[i].groups;
+  currentTab = i;
+  const groups = cur();
   document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", +b.dataset.tab === i));
   document.querySelectorAll(".tab-caption").forEach(p => p.hidden = +p.dataset.tab !== i);
   document.getElementById("groupEmpty").hidden = groups.length > 0;
   groupCanvas.parentElement.hidden = groups.length === 0;
-  const few = groups.filter(g => g.few).map(g => g.value);
-  const note = document.getElementById("fewNote");
-  note.hidden = few.length === 0;
-  note.textContent = `Too few to compare (under ${MIN} injuries on a surface), so they're faded: ${few.join(", ")}.`;
-  const bars = (side, color) => ({
-    label: side === "syn" ? "Synthetic" : "Natural",
-    data: groups.map(g => g[side].rate),
-    backgroundColor: groups.map(g => fade(c(color), g.few)),
-    side,
+  const bars = (side, label, fill, edge) => ({
+    label, side, data: groups.map(g => g[side].rate), backgroundColor: c(fill), borderColor: c(edge),
+    borderWidth: { top: 2, right: 0, bottom: 0, left: 0 }, categoryPercentage: 0.7, barPercentage: 0.9,
   });
   const data = {
-    labels: groups.map(g => [g.value, `n = ${g.syn.injuries} / ${g.nat.injuries}`]),
-    datasets: [bars("syn", "--synthetic-light"), bars("nat", "--natural")],
+    labels: groups.map(g => g.value.toUpperCase()),
+    datasets: [bars("syn", "Synthetic", "--synthetic", "--synthetic-light"), bars("nat", "Natural", "--natural", "--natural")],
   };
   if (groupChart) { groupChart.data = data; groupChart.update(); return; }
   groupChart = new Chart(groupCanvas, {
-    type: "bar", data,
+    type: "bar", data, plugins: [barExtras],
     options: {
       maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
-        const g = TABS[currentTab].groups[ctx.dataIndex][ctx.dataset.side];
-        const r = g.rate === null ? "—" : g.rate.toFixed(3);
-        return `${ctx.dataset.label}: ${r} per 1k (${g.injuries} inj / ${g.plays.toLocaleString()} plays)`;
-      } } } },
-      scales: { y: { beginAtZero: true, title: { display: true, text: "injuries per 1,000 plays" } } },
+      layout: { padding: { bottom: 22 } },
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false }, tooltip: { ...tooltipStyle, callbacks: {
+        title: items => { const g = cur()[items[0].dataIndex]; return `${items[0].label} · N = ${g.syn.injuries + g.nat.injuries}`; },
+        label: ctx => {
+          const g = cur()[ctx.dataIndex][ctx.dataset.side];
+          return `${ctx.dataset.side.toUpperCase()}  ${g.rate === null ? "—" : g.rate.toFixed(3)}  (${g.injuries} inj)`;
+        },
+        footer: items => cur()[items[0].dataIndex].few ? `Under ${MIN} injuries per surface. Do not compare.` : "",
+      } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: c("--text"), font: { family: "Barlow Condensed", size: 16, weight: "600" } } },
+        y: { beginAtZero: true, grace: "12%", border: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
+      },
     },
   });
 }
 
-let currentTab = 0;
 if (groupCanvas && TABS.length) {
-  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
-    currentTab = +b.dataset.tab;
-    showTab(currentTab);
-  }));
-  showTab(0);
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(+b.dataset.tab)));
+  // Wait for the web fonts so Chart.js measures axis labels with the right widths
+  document.fonts.ready.then(() => showTab(0));
 }
 
 const leagueCanvas = document.getElementById("leagueChart");
 if (leagueCanvas && LEAGUE) {
-  const line = (label, values, color) => ({
-    label, data: values, borderColor: c(color), backgroundColor: c(color),
-    tension: 0.25, pointRadius: 3, spanGaps: true,
+  // Dashed guide at the hovered season, plus each line's last value at its end
+  const lineExtras = {
+    id: "lineExtras",
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea: area } = chart;
+      const active = chart.tooltip.getActiveElements();
+      ctx.save();
+      if (active.length) {
+        ctx.strokeStyle = c("--muted");
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(active[0].element.x, area.top); ctx.lineTo(active[0].element.x, area.bottom); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.font = `12px ${MONO}`;
+      ctx.textBaseline = "middle";
+      const labels = chart.data.datasets.map((ds, d) => {
+        const i = ds.data.length - 1, pt = chart.getDatasetMeta(d).data[i];
+        return ds.data[i] === null || !pt ? null : { ds, text: `${ds.short} ${ds.data[i].toFixed(2)}`, x: pt.x + 10, y: pt.y };
+      }).filter(Boolean);
+      // Keep the two end labels at least 14px apart when the lines finish close together
+      if (labels.length === 2 && Math.abs(labels[0].y - labels[1].y) < 14) {
+        const [hi, lo] = labels[0].y <= labels[1].y ? labels : [labels[1], labels[0]];
+        const mid = (hi.y + lo.y) / 2;
+        hi.y = mid - 7;
+        lo.y = mid + 7;
+      }
+      labels.forEach(l => { ctx.fillStyle = l.ds.borderColor; ctx.fillText(l.text, l.x, l.y); });
+      ctx.restore();
+    },
+  };
+  const line = (label, short, values, color, pointStyle) => ({
+    label, short, data: values, borderColor: c(color), backgroundColor: c("--panel"), pointStyle,
+    pointRadius: 4, pointHoverRadius: 5, pointBorderWidth: 1.5, borderWidth: 2, spanGaps: true,
   });
-  new Chart(leagueCanvas, {
-    type: "line",
+  document.fonts.ready.then(() => new Chart(leagueCanvas, {
+    type: "line", plugins: [lineExtras],
     data: {
       labels: LEAGUE.seasons,
-      datasets: [line("Synthetic", LEAGUE.syn, "--synthetic-light"), line("Natural", LEAGUE.nat, "--natural")],
+      datasets: [line("Synthetic", "SYN", LEAGUE.syn, "--synthetic-light", "circle"), line("Natural", "NAT", LEAGUE.nat, "--natural", "rect")],
     },
     options: {
       maintainAspectRatio: false,
+      layout: { padding: { right: 72 } },
       interaction: { mode: "index", intersect: false },
-      plugins: { tooltip: { callbacks: { label: ctx =>
-        `${ctx.dataset.label}: ${ctx.parsed.y === null ? "—" : ctx.parsed.y.toFixed(2)} per game` } } },
-      scales: { y: { beginAtZero: true, title: { display: true, text: "injuries per team-game" } } },
+      plugins: { legend: { display: false }, tooltip: { ...tooltipStyle, callbacks: {
+        label: ctx => `${ctx.dataset.short}  ${ctx.parsed.y === null ? "—" : ctx.parsed.y.toFixed(2)}`,
+        footer: items => {
+          if (items.length < 2 || items.some(i => i.parsed.y === null)) return "";
+          const gap = items[0].parsed.y - items[1].parsed.y;
+          return `GAP  ${gap >= 0 ? "+" : ""}${gap.toFixed(2)}`;
+        },
+      } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
+        y: { grace: "10%", border: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
+      },
     },
-  });
+  }));
 }
 </script>
 {% endblock %}
