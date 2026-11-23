@@ -135,3 +135,40 @@
   </footer>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+const TABS = {{ tabs|tojson }};
+const LEAGUE = {{ league|tojson }};
+const MIN = {{ min_injuries }};
+const MONO = "JetBrains Mono";
+const css = getComputedStyle(document.documentElement);
+const c = name => css.getPropertyValue(name).trim();
+Chart.defaults.color = c("--muted");
+Chart.defaults.borderColor = c("--border");
+Chart.defaults.font.family = "Inter";
+const tooltipStyle = {
+  backgroundColor: "#0B0B0C", borderColor: c("--border"), borderWidth: 1, cornerRadius: 0, padding: 10,
+  titleFont: { family: "Barlow Condensed", size: 15, weight: "600" }, bodyFont: { family: MONO, size: 12 },
+  footerFont: { family: "Inter", size: 11, weight: "400" }, footerColor: c("--muted"), boxWidth: 8, boxHeight: 8,
+};
+
+// 95% CI for the turf/grass rate ratio (log method on the injury counts)
+const ci = document.getElementById("ci");
+if (ci) {
+  const a = +ci.dataset.syn, b = +ci.dataset.nat, rr = +ci.dataset.rr;
+  if (a > 0 && b > 0 && rr > 0) {
+    const se = Math.sqrt(1 / a + 1 / b);
+    const lo = rr * Math.exp(-1.96 * se), hi = rr * Math.exp(1.96 * se);
+    const pos = v => `${(v / Math.max(2, hi * 1.15)) * 100}%`;
+    ci.querySelector(".ci-range").style.cssText = `left: ${pos(lo)}; width: calc(${pos(hi)} - ${pos(lo)})`;
+    ci.querySelector(".ci-dot").style.left = pos(rr);
+    ci.querySelector(".ci-one").style.left = pos(1);
+    document.getElementById("ciText").textContent = `RR ${rr.toFixed(2)} · 95% CI ${lo.toFixed(2)}–${hi.toFixed(2)}`;
+    document.getElementById("ciNote").textContent = lo > 1
+      ? "The 95% CI stays above 1, so the gap probably isn't just noise."
+      : "The 95% CI includes 1, so we can't rule out no difference.";
+  }
+}
+</script>
+{% endblock %}
