@@ -74,6 +74,38 @@
       <p class="empty">No group rows in injury_rates yet.</p>
       {% endif %}
     </section>
+
+    <section class="dash-cell">
+      <div class="cell-head"><h2>Movement profile</h2><span class="src"><i class="sq syn"></i>Src · tracking</span></div>
+      {% if movement %}
+      {% set s, nat = movement.syn, movement.nat %}
+      <div class="legend"><span><i class="sq syn"></i>Synthetic · {{ n(s.plays) }}</span><span><i class="sq nat"></i>Natural · {{ n(nat.plays) }}</span></div>
+      {% for label, key, fmt in [("Top speed · yd/s", "max_speed", "%.2f"), ("Sharp cuts / play", "sharp_cuts", "%.3f")] %}
+      {% set top = [s[key] or 0, nat[key] or 0]|max %}
+      <div class="metric">
+        <div class="metric-head">
+          <span>{{ label }}</span>
+          <span class="delta">Δ {{ "%+.1f%%"|format((s[key] - nat[key]) / nat[key] * 100) if s[key] is not none and nat[key] else "—" }}</span>
+        </div>
+        {% for side, row in [("syn", s), ("nat", nat)] %}
+        <div class="hbar-row">
+          <div class="hbar-track"><div class="hbar-fill {{ side }}" style="width: {{ (row[key] / (top * 1.25) * 100)|round(1) if row[key] and top else 0 }}%"></div></div>
+          <span class="hbar-val{{ ' dim' if side == 'nat' }}">{{ f(row[key], fmt) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <p class="foot"><span class="tag">H2</span>
+        {% if s.max_speed > nat.max_speed and s.sharp_cuts > nat.sharp_cuts %}Turf plays are faster and have more sharp cuts, which fits H2.
+        {% elif s.max_speed > nat.max_speed %}Turf plays are a bit faster, but they don't have more sharp cuts, so H2 only half holds.
+        {% elif s.sharp_cuts > nat.sharp_cuts %}Turf plays have more sharp cuts but aren't faster, so H2 only half holds.
+        {% else %}Turf plays aren't faster or cuttier than grass, so H2 doesn't hold here.{% endif %}
+      </p>
+      <p class="foot">Averages are weighted by plays across positions. This compares turf plays to grass plays, not injury plays to normal plays.</p>
+      {% elif not error %}
+      <p class="empty">No movement_summary rows yet. Run part2_spark/02_movement_features.py first.</p>
+      {% endif %}
+    </section>
   </div>
 </div>
 {% endblock %}
