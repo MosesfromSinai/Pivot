@@ -38,3 +38,35 @@
 {% elif not error %}
 <div class="panel empty">No overall rows in injury_rates yet. Run part2_spark/01_injury_rates.py first.</div>
 {% endif %}
+
+<section class="panel">
+  <div class="panel-header">
+    <h2>Injuries per 1,000 plays by group</h2>
+    <div class="legend"><span><i class="swatch synthetic"></i>Synthetic</span><span><i class="swatch natural"></i>Natural</span></div>
+  </div>
+  {% if tabs|selectattr("groups")|list %}
+  <div class="tabs">
+    {% for t in tabs %}<button class="tab{{ ' active' if loop.first }}" data-tab="{{ loop.index0 }}">{{ t.label }}</button>{% endfor %}
+  </div>
+  {% for t in tabs %}
+  <p class="caption tab-caption" data-tab="{{ loop.index0 }}" {{ 'hidden' if not loop.first }}>
+    {% if t.key == "body_part" %}<span class="tag">H4</span>
+      {% if ankle %}We figured the extra turf injuries would mostly be ankle/foot. Ankle, foot, toes and heel make up {{ (ankle.share * 100)|round|int }}% of the turf-minus-grass gap ({{ f(ankle.ankle_foot) }} of {{ f(ankle.total) }} per 1k plays).
+      {% else %}Turf isn't higher than grass across body parts, so there's no extra to split up.{% endif %}
+    {% elif t.key == "roster_position" %}<span class="tag">H3</span>
+      {% if gap.skill and gap.linemen %}We expected a bigger turf gap for skill positions (WR, RB, TE, CB, S) than linemen. Pooled together, skill guys are {{ f(gap.skill.ratio, "%.2f") }}× on turf ({{ gap.skill.syn.injuries }} vs {{ gap.skill.nat.injuries }} injuries) and linemen are {{ f(gap.linemen.ratio, "%.2f") }}× ({{ gap.linemen.syn.injuries }} vs {{ gap.linemen.nat.injuries }}).{% if gap.linemen.few or gap.skill.few %} One side has under {{ min_injuries }} injuries, so take that comparison with a grain of salt.{% endif %}
+      {% else %}Not enough position data to compare skill players and linemen.{% endif %}
+    {% elif t.key == "severity" %}<span class="tag">H1</span> Same comparison split by how long players were out:
+      {% for g in t.groups %}{{ g.value }} is {{ f(g.ratio, "%.2f") }}×{{ ", " if not loop.last else "." }}{% endfor %}
+    {% else %}<span class="tag">H1</span> Compare the two bars inside each group: if turf is still higher with {{ t.label|lower }} held fixed, it's not just {{ t.label|lower }} doing it.
+    {% endif %}
+  </p>
+  {% endfor %}
+  <div class="chart-box"><canvas id="groupChart"></canvas></div>
+  <p class="empty" id="groupEmpty" hidden>No rows for this group yet.</p>
+  <p class="note note-warn" id="fewNote" hidden></p>
+  <p class="note">n under each group = turf / grass injuries. Body part and severity use all plays on that surface as the denominator.</p>
+  {% elif not error %}
+  <p class="empty">No group rows in injury_rates yet.</p>
+  {% endif %}
+</section>
