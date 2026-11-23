@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Pivot{% endblock %} · Pivot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="brand" href="/">PIVOT</a>
+    <div class="nav-links">
+      {% for title, endpoint in nav_links %}
+      <a href="{{ url_for(endpoint) }}"
+         class="{{ 'active' if request.blueprint == endpoint.split('.')[0] }}">{{ title }}</a>
+      {% endfor %}
+    </div>
+  </nav>
+  <main class="container">
+    {% if error %}
+    <div class="panel note note-error">{{ error }}</div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
