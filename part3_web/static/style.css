@@ -147,3 +147,29 @@ a { color: var(--synthetic-light); }
 .hbar-fill.nat { background: var(--natural); }
 .hbar-val { font: 400 26px/1 var(--mono); min-width: 84px; text-align: right; }
 .hbar-val.dim { color: var(--muted); }
+
+/* Small print and notes footer */
+.foot { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
+.dash .caption { font-size: 13px; margin: 10px 0 0; }
+.notes { display: grid; grid-template-columns: 90px 1fr; gap: 16px; padding: 16px 20px; }
+.notes-label { font: 600 14px var(--heading); text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.notes ol { margin: 0; padding-left: 18px; columns: 2; column-gap: 40px; font-size: 13px; color: var(--muted); }
+.notes li { break-inside: avoid; margin-bottom: 6px; }
+.notes b { color: var(--text); font-weight: 600; }
+
+@media (max-width: 900px) {
+  .dash-row { grid-template-columns: 1fr; }
+  .dash-row > .dash-cell + .dash-cell { border-left: 0; border-top: 1px solid var(--border); }
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(3) { border-left: 0; }
+  .stat:nth-child(n + 3) { border-top: 1px solid var(--border); }
+  .notes { grid-template-columns: 1fr; }
+  .notes ol { columns: 1; }
+}
+
+@media (max-width: 600px) {
+  .brand::after { display: none; }
+  .nav-links a { padding: 0 12px; font-size: 15px; }
+  .dash-title { font-size: 38px; }
+  .stat-big { font-size: 38px; }
+}
