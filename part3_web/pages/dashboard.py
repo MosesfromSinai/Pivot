@@ -137,3 +137,23 @@ def load_league():
         out[s + "_avg"] = ratio(sum(r["injuries"] for r in mine.values()),
                                 sum(r["games"] for r in mine.values()))
     return out
+
+
+@bp.route("/dashboard")
+def index():
+    try:
+        overall = load_overall()
+        tabs = load_tabs()
+        movement = load_movement()
+        league = load_league()
+    except DatabaseError as e:
+        return render_template(
+            "dashboard.html", error=f"Couldn't load the dashboard data. {e}",
+            overall=None, tabs=[], movement=None, league=None,
+            gap={}, ankle=None, min_injuries=MIN_INJURIES,
+        ), 503
+    return render_template(
+        "dashboard.html", overall=overall, tabs=tabs, movement=movement,
+        league=league, gap=position_gap(tabs), ankle=ankle_foot_share(tabs),
+        min_injuries=MIN_INJURIES,
+    )
