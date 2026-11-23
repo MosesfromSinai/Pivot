@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% macro f(v, fmt="%.3f") %}{{ fmt|format(v) if v is not none else "—" }}{% endmacro %}
+
+{% block content %}
+<div class="panel-header">
+  <h1>Turf vs. Grass</h1>
+  <span class="muted">Kaggle NFL 1st and Future + nflverse injury reports</span>
+</div>
+
+{% if overall %}
+<div class="stat-grid">
+  <div class="stat-card synthetic">
+    <div class="stat-label">Synthetic · injuries per 1k plays</div>
+    <div class="stat-value">{{ f(overall.syn.rate) }}</div>
+    <div class="stat-sub">{{ overall.syn.injuries }} injuries / {{ "{:,}".format(overall.syn.plays) }} plays</div>
+  </div>
+  <div class="stat-card natural">
+    <div class="stat-label">Natural · injuries per 1k plays</div>
+    <div class="stat-value">{{ f(overall.nat.rate) }}</div>
+    <div class="stat-sub">{{ overall.nat.injuries }} injuries / {{ "{:,}".format(overall.nat.plays) }} plays</div>
+  </div>
+  <div class="stat-card injury">
+    <div class="stat-label">Turf vs. grass ratio</div>
+    <div class="stat-value">{{ f(overall.ratio, "%.2f") }}×</div>
+    <div class="stat-sub">synthetic rate ÷ natural rate</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total plays</div>
+    <div class="stat-value">{{ "{:,}".format(overall.plays) }}</div>
+    <div class="stat-sub">{{ overall.syn.injuries + overall.nat.injuries }} injuries total</div>
+  </div>
+</div>
+<p class="caption"><span class="tag">H1</span>
+  {% if overall.ratio and overall.ratio > 1 %}Turf comes out {{ f(overall.ratio, "%.2f") }}× grass per play, so H1 holds on the raw numbers. It's only {{ overall.syn.injuries + overall.nat.injuries }} injuries though, so the splits below get thin fast.
+  {% else %}Turf isn't higher than grass here, so H1 doesn't hold on these numbers.{% endif %}
+</p>
+{% elif not error %}
+<div class="panel empty">No overall rows in injury_rates yet. Run part2_spark/01_injury_rates.py first.</div>
+{% endif %}
