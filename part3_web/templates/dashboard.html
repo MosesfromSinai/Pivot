@@ -203,5 +203,48 @@ const barExtras = {
     ctx.restore();
   },
 };
+
+function showTab(i) {
+  currentTab = i;
+  const groups = cur();
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", +b.dataset.tab === i));
+  document.querySelectorAll(".tab-caption").forEach(p => p.hidden = +p.dataset.tab !== i);
+  document.getElementById("groupEmpty").hidden = groups.length > 0;
+  groupCanvas.parentElement.hidden = groups.length === 0;
+  const bars = (side, label, fill, edge) => ({
+    label, side, data: groups.map(g => g[side].rate), backgroundColor: c(fill), borderColor: c(edge),
+    borderWidth: { top: 2, right: 0, bottom: 0, left: 0 }, categoryPercentage: 0.7, barPercentage: 0.9,
+  });
+  const data = {
+    labels: groups.map(g => g.value.toUpperCase()),
+    datasets: [bars("syn", "Synthetic", "--synthetic", "--synthetic-light"), bars("nat", "Natural", "--natural", "--natural")],
+  };
+  if (groupChart) { groupChart.data = data; groupChart.update(); return; }
+  groupChart = new Chart(groupCanvas, {
+    type: "bar", data, plugins: [barExtras],
+    options: {
+      maintainAspectRatio: false,
+      layout: { padding: { bottom: 22 } },
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false }, tooltip: { ...tooltipStyle, callbacks: {
+        title: items => { const g = cur()[items[0].dataIndex]; return `${items[0].label} · N = ${g.syn.injuries + g.nat.injuries}`; },
+        label: ctx => {
+          const g = cur()[ctx.dataIndex][ctx.dataset.side];
+          return `${ctx.dataset.side.toUpperCase()}  ${g.rate === null ? "—" : g.rate.toFixed(3)}  (${g.injuries} inj)`;
+        },
+        footer: items => cur()[items[0].dataIndex].few ? `Under ${MIN} injuries per surface. Do not compare.` : "",
+      } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: c("--text"), font: { family: "Barlow Condensed", size: 16, weight: "600" } } },
+        y: { beginAtZero: true, grace: "12%", border: { display: false }, ticks: { font: { family: MONO, size: 11 } } },
+      },
+    },
+  });
+}
+
+if (groupCanvas && TABS.length) {
+  document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => showTab(+b.dataset.tab)));
+  showTab(0);
+}
 </script>
 {% endblock %}
