@@ -25,14 +25,20 @@ a { color: var(--synthetic-light); }
 .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
 
 /* Top nav */
-.topnav { display: flex; align-items: center; gap: 32px; padding: 0 24px; height: 56px;
+.topnav { display: flex; align-items: stretch; height: 64px; padding: 0 0 0 20px;
   background: #000; border-bottom: 1px solid var(--border); }
-.brand { font: 700 26px var(--heading); letter-spacing: 0.12em; color: var(--text); text-decoration: none; }
-.nav-links { display: flex; gap: 4px; overflow-x: auto; }
-.nav-links a { font: 600 15px var(--heading); text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--muted); text-decoration: none; padding: 17px 12px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.brand { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding-right: 22px;
+  border-right: 1px solid var(--border); font: 700 24px/1 var(--heading); letter-spacing: 0.1em;
+  color: var(--text); text-decoration: none; }
+.brand::after { content: "NFL turf vs. grass injury analytics"; font: 600 11px/1 var(--heading);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.nav-links { display: flex; overflow-x: auto; }
+.nav-links a { display: flex; align-items: center; padding: 0 22px; font: 600 18px var(--heading);
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-decoration: none;
+  border-bottom: 2px solid transparent; white-space: nowrap; }
 .nav-links a:hover { color: var(--text); }
-.nav-links a.active { color: var(--text); border-bottom-color: var(--synthetic-light); }
+.nav-links a.active { color: var(--text); border-bottom-color: var(--synthetic-light);
+  background: linear-gradient(transparent 55%, rgba(59, 125, 221, 0.1)); }
 
 /* Panels and stat cards */
 .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 20px; }
