@@ -65,7 +65,7 @@ a { color: var(--synthetic-light); }
 .table th { font: 600 13px var(--heading); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
   text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
 .table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-.table td.num { text-align: right; }
+.table td.num, .table th.num { text-align: right; }
 .table tr.dim td { color: var(--muted); }
 
 /* Notes and captions */
