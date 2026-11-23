@@ -105,3 +105,35 @@ def ankle_foot_share(tabs):
         return None
     part = sum(v for k, v in extra.items() if k in ANKLE_FOOT)
     return {"total": total, "ankle_foot": part, "share": part / total}
+
+
+def load_movement():
+    # Averages weighted by plays so big position groups count more
+    rows = query(
+        "SELECT field_type, SUM(plays) AS plays,"
+        " SUM(avg_max_speed * plays) / SUM(plays) AS max_speed,"
+        " SUM(avg_sharp_cuts * plays) / SUM(plays) AS sharp_cuts"
+        " FROM movement_summary WHERE field_type IN (%s, %s) GROUP BY field_type",
+        tuple(SIDES),
+    )
+    sides = {SIDES[r["field_type"]]: r for r in rows}
+    return sides if len(sides) == 2 else None
+
+
+def load_league():
+    rows = query(
+        "SELECT season, surface, SUM(injuries) AS injuries, SUM(games) AS games"
+        " FROM league_injury_rates WHERE surface IN (%s, %s)"
+        " GROUP BY season, surface ORDER BY season",
+        tuple(SIDES),
+    )
+    if not rows:
+        return None
+    seasons = sorted({r["season"] for r in rows})
+    out = {"seasons": seasons}
+    for surface, s in SIDES.items():
+        mine = {r["season"]: r for r in rows if r["surface"] == surface}
+        out[s] = [ratio(mine[y]["injuries"], mine[y]["games"]) if y in mine else None for y in seasons]
+        out[s + "_avg"] = ratio(sum(r["injuries"] for r in mine.values()),
+                                sum(r["games"] for r in mine.values()))
+    return out
