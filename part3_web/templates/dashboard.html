@@ -170,5 +170,38 @@ if (ci) {
       : "The 95% CI includes 1, so we can't rule out no difference.";
   }
 }
+
+const groupCanvas = document.getElementById("groupChart");
+let currentTab = 0, groupChart = null;
+const cur = () => TABS[currentTab].groups;
+
+// Shade low-N groups, print each bar's value on top and the N under each group
+const barExtras = {
+  id: "barExtras",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea: area, scales: { x } } = chart;
+    const width = x.width / Math.max(cur().length, 1);
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.035)";
+    cur().forEach((g, i) => g.few && ctx.fillRect(x.getPixelForValue(i) - width / 2, area.top, width, area.bottom - area.top));
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea: area, scales: { x } } = chart;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.font = `11px ${MONO}`;
+    chart.data.datasets.forEach((ds, d) => chart.getDatasetMeta(d).data.forEach((bar, i) => {
+      if (ds.data[i] === null) return;
+      ctx.fillStyle = d === 0 ? c("--synthetic-light") : c("--muted");
+      ctx.fillText(ds.data[i].toFixed(2), bar.x, bar.y - 6);
+    }));
+    cur().forEach((g, i) => {
+      ctx.fillStyle = g.few ? c("--muted") : c("--injury");
+      ctx.fillText(`N=${g.syn.injuries}/${g.nat.injuries}${g.few ? " · LOW N" : ""}`, x.getPixelForValue(i), area.bottom + 40);
+    });
+    ctx.restore();
+  },
+};
 </script>
 {% endblock %}
