@@ -57,3 +57,14 @@ CREATE TABLE IF NOT EXISTS timing_results (
     seconds        DOUBLE    NOT NULL,
     run_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Tracking records used by the Part 3 Play Viewer.
+CREATE TABLE IF NOT EXISTS play_tracks (
+    play_key VARCHAR(32) NOT NULL,
+    time DOUBLE NOT NULL,
+    x DOUBLE,
+    y DOUBLE,
+    speed DOUBLE,
+    dir DOUBLE,
+    PRIMARY KEY (play_key, time)
+);
