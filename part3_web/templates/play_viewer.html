@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Play Viewer{% endblock %}
+
+{% block content %}
+
+<style>
+    .pv-controls {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pv-btn {
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 8px 14px;
+        cursor: pointer;
+        font-family: var(--heading);
+        font-size: 16px;
+    }
+
+    .pv-btn:hover,
+    .pv-btn.active {
+        background: var(--synthetic);
+        color: white;
+    }
+
+    .pv-slider {
+        flex: 1;
+        min-width: 120px;
+        accent-color: #3B7DDD;
+        cursor: pointer;
+    }
+
+    .pv-time {
+        font: 12px var(--mono);
+        color: var(--muted);
+    }
+</style>
+{% endblock %}
