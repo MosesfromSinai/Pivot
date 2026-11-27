@@ -231,6 +231,35 @@
 
             <rect x="110" width="10" height="53.3"
                   fill="#1c2028"/>
+
+            <!-- Yard lines -->
+            {% for yard in range(10, 111, 5) %}
+            <line x1="{{ yard }}" y1="0"
+                  x2="{{ yard }}" y2="53.3"
+                  stroke="#34363d"
+                  stroke-width="0.8"
+                  vector-effect="non-scaling-stroke"/>
+            {% endfor %}
+
+            <!-- Yard numbers -->
+            {% for yard in range(20, 101, 10) %}
+            {% set number = [yard - 10, 110 - yard]|min %}
+
+            <text class="yard-top" x="{{ yard }}" y="4"
+                  fill="#777" font-size="2"
+                  text-anchor="middle">{{ number }}</text>
+
+            <text class="yard-bottom" x="{{ yard }}" y="50"
+                  fill="#777" font-size="2"
+                  text-anchor="middle">{{ number }}</text>
+
+            {% endfor %}
+
+            <!-- Field border -->
+            <rect width="120" height="53.3"
+                  fill="none" stroke="#555"
+                  stroke-width="1"
+                  vector-effect="non-scaling-stroke"/>
         </svg>
     </div>
     {% endif %}
