@@ -324,6 +324,29 @@
         </p>
 
     </div>
+
+    <!-- Speed chart -->
+    <div class="pv-panel">
+
+        <div class="cell-head">
+            <h2>Speed Trace · yd/s</h2>
+            <span class="src">SRC: TRACKING</span>
+        </div>
+
+        <div class="chart-box" style="height:180px;">
+            <canvas id="speedChart"></canvas>
+        </div>
+
+        <p id="chart-error" class="note note-error" hidden>
+            Speed chart could not load.
+        </p>
+
+        <p class="caption">
+            H2: The speed trace shows acceleration, slowing down,
+            and speed during sharp directional changes.
+        </p>
+
+    </div>
     {% endif %}
 </div>
 {% endblock %}
