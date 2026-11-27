@@ -735,6 +735,43 @@
         playBtn.textContent = "Ⅱ Pause";
         animationID = requestAnimationFrame(tick);
     });
+
+    // Restart button.
+    document.getElementById("restart-btn")
+        .addEventListener("click", () => {
+            pause();
+            elapsed = 0;
+            renderFrame(0);
+        });
+
+    // Timeline slider.
+    slider.addEventListener("input", () => {
+        pause();
+
+        const index = Number(slider.value);
+
+        elapsed = tracks[index].elapsed;
+        renderFrame(index);
+    });
+
+    // Playback speed controls.
+    document.querySelectorAll(".rate-btn").forEach(button => {
+        button.addEventListener("click", () => {
+            rate = Number(button.dataset.rate);
+
+            document.querySelectorAll(".rate-btn").forEach(b => {
+                b.classList.remove("active");
+            });
+
+            button.classList.add("active");
+        });
+    });
+
+    // Switch between zoomed and full field views.
+    zoomBtn.addEventListener("click", () => {
+        zoomed = !zoomed;
+        updateZoom();
+    });
 </script>
 {% endif %}
 {% endblock %}
