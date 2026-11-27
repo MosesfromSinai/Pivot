@@ -425,7 +425,7 @@
 {% block scripts %}
 {% if stats and tracks %}
 
-<script type="text/plain">
+<script>
     const tracks = JSON.parse(
         document.getElementById("track-data").textContent
     );
@@ -896,6 +896,11 @@
     } else {
         document.getElementById("chart-error").hidden = false;
     }
+
+    // Initially show the complete play.
+    updateZoom();
+    renderFrame(tracks.length - 1);
 </script>
+
 {% endif %}
 {% endblock %}
