@@ -101,8 +101,35 @@ boundaries = (
     .agg(F.min("end_time").alias("end_time"))
 )
 
+# Retain only active-play tracking records.
+play_tracks = (
+    tracks.join(boundaries, "play_key")
+    .filter(
+        (F.col("time") >= F.col("start_time"))
+        & (F.col("time") <= F.col("end_time"))
+    )
+    .select("play_key", "time", "x", "y", "speed", "dir")
+    .dropna(subset=["play_key", "time", "x", "y"])
+    .dropDuplicates(["play_key", "time"])
+    .cache()
+)
+
+# Validate the output.
+print("\n===== PLAY TRACKS =====")
 print("Selected injury plays:", injury_plays.count())
 print("Selected normal plays:", normal_plays.count())
+print("Available plays:", play_tracks.select("play_key").distinct().count())
+print("Tracking records:", play_tracks.count())
 
+play_tracks.orderBy("play_key", "time").show(10, truncate=False)
+
+# Only publish when explicitly requested.
+if "--publish" in sys.argv:
+    write_table(play_tracks, "play_tracks")
+    print("Play tracks saved to MySQL.")
+else:
+    print("Read-only test completed.")
+
+play_tracks.unpersist()
 selected_plays.unpersist()
 spark.stop()
