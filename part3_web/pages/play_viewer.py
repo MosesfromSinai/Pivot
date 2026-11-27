@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request
 from db import query
 
+bp = Blueprint("play_viewer", __name__)
+NAV_TITLE = "Play Viewer"
 
 
 def find_sharp_cuts(tracks):
@@ -37,6 +39,7 @@ def find_sharp_cuts(tracks):
     return cuts
 
 
+@bp.route("/play")
 def index():
     key = request.args.get("key", "")
     mode = request.args.get("type", "injury")
@@ -76,4 +79,51 @@ def index():
     if not key and plays:
         key = plays[0]["play_key"]
 
-    return plays, key, mode
+    stats = None
+    tracks = []
+    cuts = []
+    message = None
+
+    if key:
+        results = query("""
+            SELECT play_key, player_key, game_id,
+                   field_type, roster_position,
+                   max_speed, sharp_cuts,
+                   distance_yd, duration_s, is_injury
+            FROM play_features
+            WHERE play_key = %s
+        """, (key,))
+
+        tracks = query("""
+            SELECT time, x, y, speed, dir
+            FROM play_tracks
+            WHERE play_key = %s
+            ORDER BY time
+        """, (key,))
+
+        if results and tracks:
+            stats = results[0]
+            cuts = find_sharp_cuts(tracks)
+
+            # Start the speed graph at zero seconds.
+            start_time = tracks[0]["time"]
+
+            for point in tracks:
+                point["elapsed"] = round(
+                    point["time"] - start_time, 3
+                )
+        else:
+            message = "Tracking data is unavailable for this play."
+    else:
+        message = "No plays are available in this category."
+
+    return render_template(
+        "play_viewer.html",
+        plays=plays,
+        key=key,
+        mode=mode,
+        stats=stats,
+        tracks=tracks,
+        cuts=cuts,
+        message=message
+    )
