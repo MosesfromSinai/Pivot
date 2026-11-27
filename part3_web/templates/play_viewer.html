@@ -260,7 +260,38 @@
                   fill="none" stroke="#555"
                   stroke-width="1"
                   vector-effect="non-scaling-stroke"/>
+
+            <!-- Full route shown faintly -->
+            <polyline id="full-path"
+                      fill="none"
+                      stroke="#3B7DDD"
+                      opacity="0.18"
+                      stroke-width="2"
+                      vector-effect="non-scaling-stroke"/>
+
+            <!-- Route traveled during playback -->
+            <polyline id="movement-path"
+                      fill="none"
+                      stroke="#3B7DDD"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      vector-effect="non-scaling-stroke"/>
+
+            <g id="cut-markers"></g>
+
+            <!-- Player position -->
+            <circle id="player-dot"
+                    r="0.8"
+                    fill="#FFFFFF"/>
+
         </svg>
+
+        <div class="legend" style="margin-top:8px;">
+            <span style="color:#3B7DDD;">━ Movement</span>
+            <span style="color:#E63946;">━ Sharp Cut</span>
+            <span>● Player</span>
+        </div>
     </div>
     {% endif %}
 </div>
