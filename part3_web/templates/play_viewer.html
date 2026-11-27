@@ -815,6 +815,43 @@
                 ctx.restore();
             }
         };
+
+        speedChart = new Chart(
+            document.getElementById("speedChart"), {
+
+            type: "line",
+
+            plugins: [playbackCursor],
+
+            data: {
+                datasets: [
+                    {
+                        label: "Speed",
+
+                        data: tracks.map(p => ({
+                            x: p.elapsed,
+                            y: p.speed
+                        })),
+
+                        borderColor: "#3B7DDD",
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0,
+                        order: 1
+                    },
+                    {
+                        label: "Sharp Cuts",
+                        data: cutSpeedData,
+                        borderColor: "#E63946",
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        spanGaps: false,
+                        tension: 0,
+                        order: 0
+                    }
+                ]
+            },
+        });
     }
 </script>
 {% endif %}
