@@ -38,5 +38,50 @@
         font: 12px var(--mono);
         color: var(--muted);
     }
+
+    .pv-field {
+        display: block;
+        width: 100%;
+        max-height: 380px;
+        background: #101115;
+        border: 1px solid var(--border);
+    }
+
+    .pv-live {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        background: var(--bg);
+        border: 1px solid var(--border);
+    }
+
+    .pv-live > div {
+        padding: 10px 14px;
+        border-right: 1px solid var(--border);
+    }
+
+    .pv-live > div:last-child {
+        border-right: 0;
+    }
+
+    .pv-value {
+        font: 20px var(--mono);
+    }
+
+    .pv-panel {
+        padding: 14px 20px;
+    }
+
+    .pv-stats .stat-big {
+        font-size: 36px;
+    }
+
+    .pv-select {
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 9px;
+        font-family: var(--mono);
+        max-width: 100%;
+    }
 </style>
 {% endblock %}
