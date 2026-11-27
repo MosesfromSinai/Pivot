@@ -526,6 +526,39 @@
             marker.setAttribute("fill", "#E63946");
 
             cutGroup.appendChild(marker);
+
+            // Separate angle labels into two columns.
+            const label = document.createElementNS(svgNS, "text");
+            const connector = document.createElementNS(svgNS, "line");
+
+            const view = field.viewBox.baseVal;
+
+            const leftSide = number % 2 === 0;
+            const row = Math.floor(number / 2);
+            const rows = Math.ceil(cutWindows.length / 2);
+
+            const spacing = view.height * 0.7 / (rows + 1);
+
+            const labelX = leftSide
+                ? view.x + view.width * 0.04
+                : view.x + view.width * 0.96;
+
+            const labelY = view.y + view.height * 0.15
+                + spacing * (row + 1);
+
+            // Connect the label to the corresponding cut.
+            connector.setAttribute("x1", cut.point.x);
+            connector.setAttribute("y1", 53.3 - cut.point.y);
+            connector.setAttribute("x2", labelX);
+            connector.setAttribute("y2", labelY);
+            connector.setAttribute("stroke", "#E63946");
+            connector.setAttribute("stroke-width", "1");
+            connector.setAttribute("opacity", "0.65");
+            connector.setAttribute(
+                "vector-effect", "non-scaling-stroke"
+            );
+
+            cutGroup.appendChild(connector);
         });
     }
 </script>
