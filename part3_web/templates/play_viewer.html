@@ -584,6 +584,62 @@
             cutGroup.appendChild(label);
         });
     }
+
+    // Zoom around the actual player path.
+    function updateZoom() {
+        let x = 0;
+        let y = 0;
+        let w = 120;
+        let h = 53.3;
+
+        if (zoomed) {
+            const xs = tracks.map(p => p.x);
+            const ys = tracks.map(p => 53.3 - p.y);
+
+            const minX = Math.min(...xs);
+            const maxX = Math.max(...xs);
+            const minY = Math.min(...ys);
+            const maxY = Math.max(...ys);
+
+            const aspect = 120 / 53.3;
+
+            w = Math.min(120, Math.max(
+                36,
+                maxX - minX + 12,
+                (maxY - minY + 10) * aspect
+            ));
+
+            h = w / aspect;
+
+            x = Math.max(0, Math.min(
+                120 - w, (minX + maxX - w) / 2
+            ));
+
+            y = Math.max(0, Math.min(
+                53.3 - h, (minY + maxY - h) / 2
+            ));
+        }
+
+        markerScale = w / 120;
+
+        field.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+        player.setAttribute("r", 0.9 * markerScale);
+
+        document.querySelectorAll(".yard-top").forEach(label => {
+            label.setAttribute("y", y + 4 * markerScale);
+            label.setAttribute("font-size", 2 * markerScale);
+        });
+
+        document.querySelectorAll(".yard-bottom").forEach(label => {
+            label.setAttribute("y", y + h - 3 * markerScale);
+            label.setAttribute("font-size", 2 * markerScale);
+        });
+
+        zoomBtn.textContent = zoomed ? "Auto Zoom" : "Full Field";
+        zoomBtn.classList.toggle("active", zoomed);
+
+        drawCuts(frame);
+    }
 </script>
 {% endif %}
 {% endblock %}
