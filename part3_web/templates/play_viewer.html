@@ -686,6 +686,55 @@
         lastTick = null;
         playBtn.textContent = "▶ Play";
     }
+
+    // Advance playback using the tracking timestamps.
+    function tick(timestamp) {
+        if (!playing) return;
+
+        if (lastTick !== null) {
+            elapsed += (timestamp - lastTick) / 1000 * rate;
+        }
+
+        lastTick = timestamp;
+        elapsed = Math.min(elapsed, duration);
+
+        let index = frame;
+
+        while (
+            index < tracks.length - 1 &&
+            tracks[index + 1].elapsed <= elapsed
+        ) {
+            index++;
+        }
+
+        if (index !== frame) renderFrame(index);
+
+        if (elapsed >= duration) {
+            renderFrame(tracks.length - 1);
+            pause();
+            return;
+        }
+
+        animationID = requestAnimationFrame(tick);
+    }
+
+    // Play and pause button.
+    playBtn.addEventListener("click", () => {
+        if (playing) {
+            pause();
+            return;
+        }
+
+        if (frame === tracks.length - 1) {
+            elapsed = 0;
+            renderFrame(0);
+        }
+
+        playing = true;
+        lastTick = null;
+        playBtn.textContent = "Ⅱ Pause";
+        animationID = requestAnimationFrame(tick);
+    });
 </script>
 {% endif %}
 {% endblock %}
