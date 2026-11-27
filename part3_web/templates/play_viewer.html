@@ -84,4 +84,36 @@
         max-width: 100%;
     }
 </style>
+
+<div class="dash">
+
+    <!-- Player header -->
+    <div class="dash-head">
+        <div>
+            <div class="crumb">Play Viewer / NFL Tracking</div>
+
+            {% if stats %}
+            <h1 class="dash-title" style="font-size: 42px;">
+                Player {{ stats.player_key }} · {{ stats.roster_position }}
+            </h1>
+            {% else %}
+            <h1 class="dash-title">Play Viewer</h1>
+            {% endif %}
+        </div>
+
+        <div class="seg">
+            <a href="{{ url_for('play_viewer.index', type='injury') }}"
+               class="tab {{ 'active' if mode == 'injury' }}"
+               style="text-decoration:none;">
+                Injury Play
+            </a>
+
+            <a href="{{ url_for('play_viewer.index', type='normal') }}"
+               class="tab {{ 'active' if mode == 'normal' }}"
+               style="text-decoration:none;">
+                Normal Play
+            </a>
+        </div>
+    </div>
+</div>
 {% endblock %}
