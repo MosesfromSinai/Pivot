@@ -772,6 +772,50 @@
         zoomed = !zoomed;
         updateZoom();
     });
+
+    // Red speed segments correspond to detected cut windows.
+    const cutSpeedData = [];
+
+    cutWindows.forEach(cut => {
+        tracks.slice(cut.start, cut.index + 1).forEach(point => {
+            cutSpeedData.push({
+                x: point.elapsed,
+                y: point.speed
+            });
+        });
+
+        cutSpeedData.push({
+            x: tracks[cut.index].elapsed,
+            y: null
+        });
+    });
+
+    if (typeof Chart !== "undefined") {
+
+        // Vertical cursor follows the selected playback frame.
+        const playbackCursor = {
+            id: "playbackCursor",
+
+            afterDraw(chart) {
+                const x = chart.scales.x.getPixelForValue(
+                    tracks[frame].elapsed
+                );
+
+                const ctx = chart.ctx;
+
+                ctx.save();
+                ctx.strokeStyle = "#B0B0B0";
+                ctx.setLineDash([4, 4]);
+
+                ctx.beginPath();
+                ctx.moveTo(x, chart.chartArea.top);
+                ctx.lineTo(x, chart.chartArea.bottom);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        };
+    }
 </script>
 {% endif %}
 {% endblock %}
