@@ -115,5 +115,45 @@
             </a>
         </div>
     </div>
+
+    <!-- Select a play -->
+    <div class="pv-panel">
+        <form method="GET"
+              action="{{ url_for('play_viewer.index') }}"
+              class="pv-controls">
+
+            <input type="hidden" name="type" value="{{ mode }}">
+
+            <label for="play-select" class="stat-label">
+                Select Play
+            </label>
+
+            <select name="key" id="play-select" class="pv-select">
+                {% for play in plays %}
+                <option value="{{ play.play_key }}"
+                    {% if play.play_key == key %}selected{% endif %}>
+                    {{ play.play_key }} |
+                    {{ play.roster_position }} |
+                    {{ play.field_type }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="pv-btn active"
+                    {% if not plays %}disabled{% endif %}>
+                View Play
+            </button>
+
+            <span class="muted">
+                {{ plays|length }} available plays
+            </span>
+        </form>
+    </div>
+
+    {% if message %}
+    <div class="pv-panel">
+        <div class="note note-warn">{{ message }}</div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
