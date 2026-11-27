@@ -488,6 +488,46 @@
             point: cut
         };
     }).filter(Boolean);
+
+    // Draw sharp cuts and separated angle labels.
+    function drawCuts(index) {
+        cutGroup.replaceChildren();
+
+        cutWindows.forEach((cut, number) => {
+            if (cut.index > index) return;
+
+            // Draw the red cut segment.
+            const segment = document.createElementNS(
+                svgNS, "polyline"
+            );
+
+            segment.setAttribute("points", pathPoints(
+                tracks.slice(cut.start, cut.index + 1)
+            ));
+
+            segment.setAttribute("fill", "none");
+            segment.setAttribute("stroke", "#E63946");
+            segment.setAttribute("stroke-width", "3.5");
+            segment.setAttribute("stroke-linecap", "round");
+            segment.setAttribute(
+                "vector-effect", "non-scaling-stroke"
+            );
+
+            cutGroup.appendChild(segment);
+
+            // Draw the sharp cut marker.
+            const marker = document.createElementNS(
+                svgNS, "circle"
+            );
+
+            marker.setAttribute("cx", cut.point.x);
+            marker.setAttribute("cy", 53.3 - cut.point.y);
+            marker.setAttribute("r", 0.65 * markerScale);
+            marker.setAttribute("fill", "#E63946");
+
+            cutGroup.appendChild(marker);
+        });
+    }
 </script>
 {% endif %}
 {% endblock %}
