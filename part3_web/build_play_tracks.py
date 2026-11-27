@@ -51,6 +51,56 @@ selected_plays = (
     .cache()
 )
 
+# Read the original tracking data.
+tracking = spark.read.parquet(
+    os.path.join(BASE, "kaggle_tracking")
+)
+
+# Keep tracking records for selected plays only.
+tracks = (
+    tracking.select(
+        F.col("PlayKey").alias("play_key"),
+        "time",
+        "event",
+        "x",
+        "y",
+        F.col("s").alias("speed"),
+        "dir",
+    )
+    .join(F.broadcast(selected_plays), "play_key", "inner")
+)
+
+# Use the same event boundaries as Part 2.
+start_events = [
+    "ball_snap", "snap_direct", "kickoff", "free_kick"
+]
+
+end_events = [
+    "tackle", "pass_outcome_incomplete",
+    "out_of_bounds", "touchdown",
+    "pass_outcome_touchdown", "qb_sack",
+    "fair_catch", "touchback", "punt_downed",
+    "pass_outcome_interception", "qb_spike", "qb_kneel"
+]
+
+starts = (
+    tracks.filter(F.col("event").isin(start_events))
+    .groupBy("play_key")
+    .agg(F.min("time").alias("start_time"))
+)
+
+ends = (
+    tracks.filter(F.col("event").isin(end_events))
+    .select("play_key", F.col("time").alias("end_time"))
+)
+
+boundaries = (
+    starts.join(ends, "play_key")
+    .filter(F.col("end_time") > F.col("start_time"))
+    .groupBy("play_key", "start_time")
+    .agg(F.min("end_time").alias("end_time"))
+)
+
 print("Selected injury plays:", injury_plays.count())
 print("Selected normal plays:", normal_plays.count())
 
