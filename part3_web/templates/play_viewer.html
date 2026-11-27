@@ -640,6 +640,52 @@
 
         drawCuts(frame);
     }
+
+    // Update player position and current statistics.
+    function renderFrame(index) {
+        frame = index;
+        const point = tracks[index];
+
+        movement.setAttribute(
+            "points", pathPoints(tracks.slice(0, index + 1))
+        );
+
+        player.setAttribute("cx", point.x);
+        player.setAttribute("cy", 53.3 - point.y);
+
+        drawCuts(index);
+
+        slider.value = index;
+
+        document.getElementById("time-display").textContent =
+            `${point.elapsed.toFixed(1)} / ${duration.toFixed(1)} s`;
+
+        document.getElementById("frame-display").textContent =
+            `Frame ${index + 1}/${tracks.length}`;
+
+        document.getElementById("live-speed").textContent =
+            format(point.speed);
+
+        document.getElementById("live-dir").textContent =
+            format(point.dir, 1);
+
+        document.getElementById("live-x").textContent =
+            format(point.x);
+
+        document.getElementById("live-y").textContent =
+            format(point.y);
+
+        if (speedChart) speedChart.draw();
+    }
+
+    // Pause playback.
+    function pause() {
+        playing = false;
+        cancelAnimationFrame(animationID);
+        animationID = null;
+        lastTick = null;
+        playBtn.textContent = "▶ Play";
+    }
 </script>
 {% endif %}
 {% endblock %}
