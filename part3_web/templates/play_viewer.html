@@ -405,6 +405,18 @@
             that a surface caused an injury.
         </p>
     </div>
+
+    <!-- Real data from Flask -->
+    <script id="track-data" type="application/json">
+        {{ tracks | tojson }}
+    </script>
+
+    <script id="cut-data" type="application/json">
+        {{ cuts | tojson }}
+    </script>
+
     {% endif %}
+
 </div>
+
 {% endblock %}
