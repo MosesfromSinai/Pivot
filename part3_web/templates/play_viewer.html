@@ -862,8 +862,39 @@
                         labels: { color: "#E8E9EB" }
                     }
                 },
+
+                scales: {
+                    x: {
+                        type: "linear",
+
+                        title: {
+                            display: true,
+                            text: "Time (seconds)",
+                            color: "#8A8D94"
+                        },
+
+                        ticks: { color: "#8A8D94" },
+                        grid: { color: "#2A2C31" }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+
+                        title: {
+                            display: true,
+                            text: "Speed (yd/s)",
+                            color: "#8A8D94"
+                        },
+
+                        ticks: { color: "#8A8D94" },
+                        grid: { color: "#2A2C31" }
+                    }
+                }
             }
         });
+
+    } else {
+        document.getElementById("chart-error").hidden = false;
     }
 </script>
 {% endif %}
