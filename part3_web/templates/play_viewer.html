@@ -155,5 +155,43 @@
         <div class="note note-warn">{{ message }}</div>
     </div>
     {% endif %}
+
+    {% if stats and tracks %}
+
+    <!-- Playback controls -->
+    <div class="pv-panel pv-controls">
+
+        <button id="play-btn" class="pv-btn active">
+            ▶ Play
+        </button>
+
+        <button id="restart-btn" class="pv-btn">
+            ↻ Restart
+        </button>
+
+        <input id="timeline" class="pv-slider"
+               type="range" min="0" value="0"
+               max="{{ tracks|length - 1 }}"
+               aria-label="Playback timeline">
+
+        <span id="time-display" class="pv-time">0.0 s</span>
+        <span id="frame-display" class="pv-time">Frame 0</span>
+
+        <div class="seg">
+            <button class="pv-btn rate-btn" data-rate="0.5">
+                0.5×
+            </button>
+
+            <button class="pv-btn rate-btn active" data-rate="1">
+                1×
+            </button>
+
+            <button class="pv-btn rate-btn" data-rate="2">
+                2×
+            </button>
+        </div>
+
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
