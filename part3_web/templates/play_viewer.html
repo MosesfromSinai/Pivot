@@ -192,6 +192,47 @@
         </div>
 
     </div>
+
+    <!-- Football field -->
+    <div class="pv-panel">
+
+        <div class="cell-head">
+            <div class="pv-controls">
+
+                <span class="src"
+                      style="color:{{ '#E63946' if stats.is_injury else '#5E8C4A' }}">
+                    {{ "Injury Play" if stats.is_injury else "Normal Play" }}
+                </span>
+
+                <span class="mono muted">{{ stats.play_key }}</span>
+                <span class="src">{{ stats.field_type }}</span>
+            </div>
+
+            <div class="pv-controls">
+                <button id="zoom-btn" class="pv-btn active">
+                    Auto Zoom
+                </button>
+
+                <span class="src">SRC: TRACKING</span>
+            </div>
+        </div>
+
+        <svg id="football-field"
+             viewBox="0 0 120 53.3"
+             class="pv-field"
+             role="img"
+             aria-label="Animated player movement">
+
+            <rect width="120" height="53.3"
+                  fill="#101115"/>
+
+            <rect width="10" height="53.3"
+                  fill="#1c2028"/>
+
+            <rect x="110" width="10" height="53.3"
+                  fill="#1c2028"/>
+        </svg>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
