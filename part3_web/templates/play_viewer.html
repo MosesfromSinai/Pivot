@@ -469,6 +469,25 @@
     }
 
     fullPath.setAttribute("points", pathPoints(tracks));
+
+    // Recover the measured angle for each detected cut.
+    const cutWindows = cuts.map(cut => {
+        const index = tracks.findIndex(p => p.time === cut.time);
+
+        if (index < 5) return null;
+
+        const previous = tracks[index - 5];
+
+        let angle = Math.abs(cut.dir - previous.dir) % 360;
+        angle = Math.min(angle, 360 - angle);
+
+        return {
+            index: index,
+            start: index - 5,
+            angle: angle,
+            point: cut
+        };
+    }).filter(Boolean);
 </script>
 {% endif %}
 {% endblock %}
