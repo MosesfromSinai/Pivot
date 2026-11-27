@@ -347,6 +347,64 @@
         </p>
 
     </div>
+
+    <!-- Overall statistics -->
+    {% macro value(number) %}
+        {{ "%.2f"|format(number) if number is not none else "N/A" }}
+    {% endmacro %}
+
+    <div class="stat-strip pv-stats">
+
+        <div class="stat">
+            <div class="stat-label">Top Speed</div>
+            <div class="stat-big">{{ value(stats.max_speed) }}</div>
+            <div class="stat-sub">yd/s</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Sharp Cuts</div>
+            <div class="stat-big red">{{ stats.sharp_cuts }}</div>
+            <div class="stat-sub">directional changes</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Distance</div>
+            <div class="stat-big">{{ value(stats.distance_yd) }}</div>
+            <div class="stat-sub">yards</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-label">Duration</div>
+            <div class="stat-big">{{ value(stats.duration_s) }}</div>
+            <div class="stat-sub">seconds</div>
+        </div>
+
+    </div>
+
+    {% if cuts|length != stats.sharp_cuts %}
+    <div class="pv-panel">
+        <p class="note note-warn">
+            Visible cut count differs from the stored Part 2 count.
+            Some tracking frames may be missing.
+        </p>
+    </div>
+    {% endif %}
+
+    <div class="pv-panel">
+        <p class="foot">
+            Field dimensions: 120 × 53.3 yards.
+            Sharp cuts require a directional change of at least
+            45 degrees over approximately 0.5 seconds,
+            with both endpoint speeds at least 1 yd/s.
+            Consecutive qualifying windows count as one cut.
+        </p>
+
+        <p class="foot">
+            Source: NFL tracking data processed with Spark and
+            stored in MySQL. Individual plays do not establish
+            that a surface caused an injury.
+        </p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
