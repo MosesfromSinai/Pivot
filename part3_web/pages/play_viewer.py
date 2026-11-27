@@ -35,3 +35,45 @@ def find_sharp_cuts(tracks):
         previous_candidate = candidate
 
     return cuts
+
+
+def index():
+    key = request.args.get("key", "")
+    mode = request.args.get("type", "injury")
+
+    if mode not in ("injury", "normal"):
+        mode = "injury"
+
+    # Find plays with available tracking data.
+    available = query("""
+        SELECT p.play_key, p.player_key,
+               p.roster_position, p.field_type,
+               p.is_injury
+        FROM play_features p
+        WHERE EXISTS (
+            SELECT 1 FROM play_tracks t
+            WHERE t.play_key = p.play_key
+        )
+        ORDER BY p.play_key
+    """)
+
+    selected = next(
+        (p for p in available if p["play_key"] == key),
+        None
+    )
+
+    if selected:
+        mode = "injury" if selected["is_injury"] else "normal"
+
+    injury_mode = mode == "injury"
+
+    plays = [
+        p for p in available
+        if bool(p["is_injury"]) == injury_mode
+    ]
+
+    # Default to the first available play.
+    if not key and plays:
+        key = plays[0]["play_key"]
+
+    return plays, key, mode
